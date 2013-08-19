@@ -45,7 +45,41 @@
 	};
 	
 	Ys.$=$;
-	
+
+	Ys.getElementsByClassName = function (searchClass, node,tag) {
+		var result=[];
+		if(document.getElementsByClassName) {
+			var nodes =  (node || document).getElementsByClassName(searchClass);
+			for(var i=0 ;node = nodes[i++]; ) {
+				if(tag !== "*" && node.tagName === tag.toUpperCase()) {
+					result.push(node);
+				}
+			}
+			return result;
+		}else{
+			node = node || document;
+			tag = tag || "*";
+			var classes = searchClass.split(" "),
+			elements = (tag === "*" && node.all)? node.all : node.getElementsByTagName(tag),
+			patterns = [],
+			current,
+			match;
+			for( var l = 0;l<classes.length;l++) {
+				patterns.push(new RegExp("(^|\\s)" + classes[l] + "(\\s|$)"));
+			}
+			for( var j = 0;j<elements.length;j++) {
+				current = elements[j];
+				match = false;
+				for(var k=0, kl=patterns.length; k<kl; k++){
+					match = patterns[k].test(current.className);
+					if (!match)  break;
+			}
+			if (match)  result.push(current);
+		}
+		return result;
+		}
+	};
+
 	/*这里借用一下jquery的函数，返回浏览器的vender前缀*/
 	var getVendorPrefix = function(index) {
 		var body, i, style, transition, vendor ,transEndEventNames,animationEndEventNames;
@@ -161,12 +195,14 @@
 	
 	Ys.removeClass = function(element,className) {
 		var classArray = null;
+
 		try {
 			classArray = element.className.split(' ');
 			for(var i = 0;i<classArray.length;i++) {
 				if(classArray[i] == className)classArray[i] = '';
 			}
 			element.className = classArray.join(' ');
+
 		}catch(e) {}
 	};
 	
@@ -1102,13 +1138,11 @@
 			
 			for(var i = 0;i<options.toVerifyItems.length;i++) {
 				
-				(function() {
-					var index = i;
-					Ys.addEventListener(self.toVerifyItems[index],'blur',function() {
-						return checkOnce(index);
-					});
-				})();
-				
+				Ys.addEventListener(self.toVerifyItems[i],'blur',function(i) {
+					return function(){
+						checkOnce(i);
+					};
+				}(i));
 			}
 			
 			Ys.addEventListener(self.form,'submit',function(e) {
