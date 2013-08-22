@@ -231,8 +231,9 @@
 			onTimeout: options.onTimeout || function() {},
 			acceptdatatype: options.acceptdatatype || 'json',
 			data: options.data || '',
-			useIframe:options.useIframe|| false,
-			formDom:options.formDom|| null
+			hasFile:options.hasFile|| false,
+			formDom:options.formDom|| null,
+			files:options.files || null
 		};
 		
 		
@@ -319,66 +320,12 @@
 			}
 		};
 		
-		var useIframeInit = function() {
-			var id='iframePost';
-			try{
-				self.iframe = document.createElement('<iframe id = ' + name + ' name=' + id + '/>');
-			}catch(e) {
-				self.iframe = document.createElement('iframe');
-			}
-			self.iframe.id = id;
-			self.iframe.name = id;
-			self.iframe.src= window.location.href;
-			self.iframe.style.position = 'absolute';
-			self.iframe.style.top = self.iframe.style.left = '-1000px';
-			options.formDom.target = id;
-			options.formDom.action = options.url;
-			if(options.formDom.encoding) {
-				//ie浏览器
-				options.formDom.setAttribute('encoding','multipart/form-data');
-				options.formDom.setAttribute('enctype','multipart/form-data');//ie8
-			}else {
-				//w3c
-				options.formDom.setAttribute('enctype','multipart/form-data');
-			}
-			
-			document.body.insertBefore(self.iframe,document.body.firstChild);
-			
-		};
 		
-		
-		var iframeSend = function() {
-			
-			function checkstate(){
-				if(doc.readyState=='complete')alert(doc.responseText);
-				else setTimeout(checkstate,200);
-				
-			}
-			
-			
-			options.formDom.submit();
-			//var doc =null;
-			/*if (document.all){//IE
-                doc = document.frames["iframePost"].document;
-			}else{//Firefox    
-                doc = document.getElementById("iframePost").contentDocument;
-			}*/
-			var doc = self.iframe.contentDocument ? self.iframe.contentDocument : self.iframe.document;
-			Ys.addEventListener(self.iframe,'load',function() {
-				checkstate();
-			});
-			
-			/*setInterval(function(){
-				alert()
-			},2000)*/
-
-		};
 		
 		var XHR2Send = function(file) {
 			
 			if(!file.files.length)
 			return;
-			//暂时禁用上传按钮
 				
 			var formData = new FormData();
 			//XMLHttpRequest2 对象，支持上传文件
@@ -387,8 +334,7 @@
 			var uploadedBytes = 0;
 			//文件总字节数
 			var totalBytes = 0;
-		
-			formData.append('file',file.files[0]);
+			formData.append(file.name,file.files[0]);
 			Ys.addEventListener(self.xhr2.upload,'progress',function(e) {
 				if (e.lengthComputable) {
 					uploadedBytes = e.loaded;
@@ -398,7 +344,7 @@
 					bytesTransfered = '';
 					if (uploadedBytes > 1024 * 1024)bytesTransfered = Math.round(uploadedBytes * 100 / (1024 * 1024)) / 100 + 'MB';
 					else bytesTransfered = Math.round(uploadedBytes * 100 / 1024) / 100 + 'KB';
-					$('username_info').element.innerHTML = bytesTransfered;
+					//console.log(bytesTransfered);
 					//上传完成，显示上传文件信息
 					if(percentComplete ===  100) {}
 				} else {
@@ -426,25 +372,171 @@
 			self.xhr2.send(formData);
 
 		};
+
+		var createIframe = function(id, uri) {
+			//create frame
+            var frameId = 'iframe' + id;
+            var iframeHtml = '<iframe id="' + frameId + '" name="' + frameId + '" style="position:absolute; top:-9999px; left:-9999px"';
+			if(window.ActiveXObject)
+			{
+                if(typeof uri== 'boolean'){
+					iframeHtml += ' src="' + 'javascript:false' + '"';
+				}
+				else if(typeof uri== 'string'){
+					iframeHtml += ' src="' + uri + '"';
+				}
+			}
+			iframeHtml += ' />';
+
+			jQuery(iframeHtml).appendTo(document.body);
+
+			//var tmp = document.createElement('div');
+			//document.body.insertBefore(tmp,document.body.firstChild);
+			//tmp.innerHTML=iframeHtml;
+
+            return $(frameId).element;
+		};
+
+		var createForm = function(id, fileElement, data) {
+			var formId = 'Form' + id;
+			var fileId = 'File' + id;
+			var form = jQuery('<form  action="" method="POST" name="' + formId + '" id="' + formId + '" enctype="multipart/form-data"></form>');	
+			if(data)
+			{
+				for(var i in data)
+				{
+					jQuery('<input type="hidden" name="' + i + '" value="' + data[i] + '" />').appendTo(form);
+				}			
+			}		
+			var oldElement = jQuery(fileElement);
+			var newElement = jQuery(oldElement).clone();
+			jQuery(oldElement).attr('id', fileId);
+			jQuery(oldElement).before(newElement);
+			jQuery(oldElement).appendTo(form);
+
+			//set attributes
+			jQuery(form).css('position', 'absolute');
+			jQuery(form).css('top', '-1200px');
+			jQuery(form).css('left', '-1200px');
+			jQuery(form).appendTo('body');		
+			return form;
+		};
+
+		var useIframeInit = function(){
+			var id = new Date().getTime();
+			self.iframe = createIframe(id);
+			self.form = createForm(id,options.files,(typeof(options.data)=='undefined'?false:options.data));
+			var frameId = 'iframe' + id;
+			var formId = 'form' + id;
+
+			var requestDone = false;
+			// Create the request object
+			var xml = {};
+			// Wait for a response to come back
+			var uploadCallback = function(isTimeout) {
+				var io = document.getElementById(frameId);
+				try {
+					if(io.contentWindow) {
+						xml.responseText = io.contentWindow.document.body?io.contentWindow.document.body.innerHTML:null;
+						xml.responseXML = io.contentWindow.document.XMLDocument?io.contentWindow.document.XMLDocument:io.contentWindow.document;
+					} else if(io.contentDocument) {
+						xml.responseText = io.contentDocument.document.body?io.contentDocument.document.body.innerHTML:null;
+						xml.responseXML = io.contentDocument.document.XMLDocument?io.contentDocument.document.XMLDocument:io.contentDocument.document;
+					}
+				} catch(e) {
+					//jQuery.handleError(s, xml, null, e);
+				}
+				if ( xml || isTimeout == "timeout") {
+					requestDone = true;
+					var status;
+					try {
+						status = isTimeout != "timeout" ? "success" : "error";
+						// Make sure that the request was successful or notmodified
+						if ( status != "error" ) {
+							// process the data (runs the xml through httpData regardless of callback)
+							var data = xml.responseText ? xml.responseText : xml.responseXML;
+							// If a local callback was specified, fire it and pass it the data
+							if ( options.onSuccess ) options.onSuccess( data, status );
+
+						} //else console.log(e);//jQuery.handleError(s, xml, status);
+					} catch(e) {
+						status = "error";
+						//jQuery.handleError(s, xml, status, e);
+					}
+
+					// Process result
+					if ( options.onComplete )
+						options.onComplete(xml, status);
+
+					jQuery(io).unbind();
+
+					setTimeout(function()
+									{	try {
+											jQuery(io).remove();
+											self.form.remove();
+										} catch(e) {
+											//console.log(e);
+											//jQuery.handleError(s, xml, null, e);
+										}							
+
+									}, 100);
+
+					xml = null;
+				}
+			};
+			// Timeout checker
+			if ( options.timeout > 0 ) {
+				setTimeout(function(){
+					// Check to see if the request is still happening
+					if( !requestDone ) uploadCallback( "timeout" );
+				}, options.timeout);
+			}
+			try {
+				self.form.attr('action', options.url);
+				self.form.attr('method', 'POST');
+				self.form.attr('target', frameId);
+				if(self.form.encoding) {
+					self.form.attr('encoding', 'multipart/form-data');
+				} else {
+					self.form.attr('enctype', 'multipart/form-data');
+				}
+				self.form.submit();
+			} catch(e) {
+				jQuery.handleError(s, xml, null, e);
+			}
+			jQuery('#' + frameId).load(uploadCallback);
+			return {abort: function () {}};
+		};
 		
+		
+		var iframeSend = function() {
+			
+
+		};
+
 		self.destruct = function() {
-			self.iframe.src ='';
-			self.iframe.parentNode.removeChild(self.iframe);
-			self.iframe = null;
-			Ys.removeListener(self.xhr2.upload,'progress');
-			Ys.removeListener(self.xhr2,'load');
-			Ys.removeListener(self.xhr2,'abort');
-			Ys.removeListener(self.xhr2,'error');
-			self.xhr2 = null;
+			try{
+				self.iframe.src ='';
+				searchClassf.iframe.parentNode.removeChild(self.iframe);
+				self.iframe = null;
+				Ys.removeListener(self.xhr2.upload,'progress');
+				Ys.removeListener(self.xhr2,'load');
+				Ys.removeListener(self.xhr2,'abort');
+				Ys.removeListener(self.xhr2,'error');
+				self.xhr2 = null;
+			}catch(e){}
 		};
 		
 		var run = function() {
-			if(options.useIframe) {
-				useIframeInit();
-				if(typeof(window.FileReader) == 'function'){
-					self.Ajax =new XHR2Send(options.formDom['test_input']);
+			if(options.hasFile) {
+				/*html5上传*/
+				if(typeof(window.FileReader) === 'function'){
+					self.Ajax =new XHR2Send(options.files);
+				} else {
+				/*iframe上传*/
+					useIframeInit();
+					iframeSend();
 				}
-				else iframeSend();
 			}else {
 				createAjaxRequest();
 				self.Ajax.onreadystatechange = stateHandler;
