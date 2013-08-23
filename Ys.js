@@ -823,7 +823,7 @@
 				else $(self.slideBox[i]).hide();
 			}
 			slider = $(sliderID).element;
-			slider.style.position ='relative';
+			//slider.style.position ='relative';
 			if(!itemWidth)itemWidth = slider.offsetWidth;
 		};
 		
@@ -1068,12 +1068,12 @@
 				self.slideBox[preShown].style[venderAnimation]="fadeOut";
 				self.slideBox[index].style[venderTiming] = self.slideBox[preShown].style[venderTiming]="ease-out";
 				self.slideBox[index].style[venderDuration] = self.slideBox[preShown].style[venderDuration] = css3Duration+"ms";
+				self.slideBox[preShown].style.zIndex = 9;
+				self.slideBox[index].style.zIndex = 10;
 				Ys.addEventListener(self.slideBox[index],venderAnimationEnd,function end() {
 					self.slideBox[index].style.opacity = 1;
-					self.slideBox[index].style.zIndex = 10;
 					self.slideBox[preShown].style.opacity = 0;
 					$(self.slideBox[preShown]).hide();
-					self.slideBox[preShown].style.zIndex = 9;
 					self.slideBox[index].style[venderAnimation] = self.slideBox[preShown].style[venderAnimation]="";
 					self.slideBox[index].style[venderTiming] = self.slideBox[preShown].style[venderTiming]="";
 					self.slideBox[index].style[venderDuration] = self.slideBox[preShown].style[venderDuration]="";
@@ -1097,9 +1097,11 @@
 			self.stop();
 			if(self.onShow === 0)self.show(totalItem-1,function() {
 				if(typeof callback == 'function')callback();
+				else self.play();
 				});
 			else self.show(self.onShow-1,function() {
 				if(typeof callback == 'function')callback();
+				else self.play();
 				});
 		};
 		
@@ -1107,10 +1109,17 @@
 			self.stop();
 			if(self.onShow ==(totalItem-1))self.show(0,function() {
 				if(typeof callback == 'function')callback();
+				else self.play();
 				});
 			else self.show(self.onShow+1,function() {
 				if(typeof callback == 'function')callback();
+				else self.play();
 				});
+		};
+
+		self.goto = function(index) {
+			self.stop();
+			self.show(index,self.play());
 		};
 		
 		/*循环播放*/
