@@ -80,7 +80,7 @@
 		}
 	};
 
-	/*这里借用一下jquery的函数，返回浏览器的vender前缀*/
+	/*这里借用一下jquery的函数，返回浏览器的vendor前缀*/
 	var getVendorPrefix = function(index) {
 		var body, i, style, transition, vendor ,transEndEventNames,animationEndEventNames;
 		body = document.body || document.documentElement;
@@ -92,7 +92,7 @@
 		transition = transition.charAt(0).toUpperCase() + transition.substr(1);
 		i = 0;
 		while (i < vendor.length) {
-			if (typeof style[vendor[i] + transition]===  "string") {
+			if (typeof style[vendor[i] + transition] ===  "string") {
 				if(index ==1)return vendor[i];
 				if(index ==2)return transEndEventNames[i];
 				if(index ==3)return animationEndEventNames[i];
@@ -103,13 +103,16 @@
 	};
 	
 	
-	var venderPrefix = getVendorPrefix(1);
-	var venderTransitionEnd = getVendorPrefix(2);
-	var venderAnimationEnd = getVendorPrefix(3);
+	var vendorPrefix = getVendorPrefix(1);
+	var vendorTransitionEnd = getVendorPrefix(2);
+	var vendorAnimationEnd = getVendorPrefix(3);
 	
-	/*判断当前是否为ie浏览器*/
-	Ys._isIE = /*@cc_on!@*/!1;
-	
+	/*判断是否为ie浏览器及其版本*/
+	Ys._IEVersion = (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE6.0")?6:
+		(navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE7.0")?7:
+		(navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE8.0")?8:
+		(navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE9.0")?9:
+		(navigator.appName == "Microsoft Internet Explorer")?10:undefined;
 	
 	Ys.addEventListener = function(element,type,fn) {
 		if(typeof element == 'undefined') return false;
@@ -806,24 +809,34 @@
 		var onShow = 0;
 		var before;
 		
+		var controllerPrefix = options.controllerPrefix;
+		var controllerOnClass = options.controllerOnClass;
+
 		var sliderTranslate;
-        var venderTransform = venderPrefix + "Transform";
-        var venderDuration = venderPrefix + "TransitionDuration";
-        var venderTiming = venderPrefix + "TransitionTimingFunction";
+        var vendorTransform = vendorPrefix + "Transform";
+        var vendorDuration = vendorPrefix + "TransitionDuration";
+        var vendorTiming = vendorPrefix + "TransitionTimingFunction";
 
 		
 		self.slideBox = [];
+		self.controllerBox = [];
 		
 		self.init = function() {
 			for(var i = 0;i<totalItem;i++) {
 				self.slideBox[i]=$(prefix+i).element;
 				self.slideBox[i].style.zIndex = 9;
-				
-				if(i === 0)$(self.slideBox[i]).show();
+				self.slideBox[i].style.position = 'absolute';
+
+				self.controllerBox[i] = $(controllerPrefix+i).element;
+
+				if(i === 0){
+					$(self.slideBox[i]).show();
+					Ys.addClass(self.controllerBox[i],controllerOnClass);
+				}
 				else $(self.slideBox[i]).hide();
 			}
 			slider = $(sliderID).element;
-			//slider.style.position ='relative';
+			slider.style.position ='absolute';
 			if(!itemWidth)itemWidth = slider.offsetWidth;
 		};
 		
@@ -853,22 +866,24 @@
 		
 		var doMove = function(index,slideDirection,callback) {
 			if(onShow ==index||sliding)return false;
+			Ys.addClass(self.controllerBox[index],controllerOnClass);
+			Ys.removeClass(self.controllerBox[onShow],controllerOnClass);
 			sliding = 1;
 			build(index,onShow,slideDirection);
 			before = onShow;
 			onShow = index;
-			if(venderPrefix) {
+			if(vendorPrefix) {
 				/*浏览器支持css3的情况*/
-				slider.style[venderTransform]="translateX("+ sliderTranslate +"px)";
-				slider.style[venderTiming]="ease";
-				slider.style[venderDuration] = css3Duration+"ms";
-				Ys.addEventListener(slider,venderTransitionEnd,function end() {
+				slider.style[vendorTransform]="translateX("+ sliderTranslate +"px)";
+				slider.style[vendorTiming]="ease";
+				slider.style[vendorDuration] = css3Duration+"ms";
+				Ys.addEventListener(slider,vendorTransitionEnd,function end() {
 					$(self.slideBox[before]).hide();
 					self.slideBox[onShow].style.left = 0;
-					slider.style[venderTransform]="";
-					slider.style[venderTiming]="";
-					slider.style[venderDuration]="";
-					slider.removeEventListener(venderTransitionEnd,end);
+					slider.style[vendorTransform]="";
+					slider.style[vendorTiming]="";
+					slider.style[vendorDuration]="";
+					slider.removeEventListener(vendorTransitionEnd,end);
 					sliding = 0;
 					if(typeof callback === 'function')callback();
 				});
@@ -910,7 +925,7 @@
 			doMove(index,'left',function() {self.play();});
 		};
 		
-		self.show = function(index) {
+		self.goto = self.show = function(index) {
 			self.stop();
 			if(!doMove(index,'',function() {self.play();}))self.play();
 		};
@@ -952,30 +967,36 @@
 		
 		var self = this;
 		
-		var fadeTimeoutID;
+		var fadeinTimeoutID,fadeoutTimeoutID;
 		var playTimeoutID;
 		
 		var totalItem = options.totalItem||5;
 		var prefix = options.prefix||'slideItem';
 		var startOpacity = options.startOpacity||0;
 		var startPosition = options.startPosition||0;/*初始偏移位置*/
-		var css3Duration = options.css3Duration||300;/*持续时间*/
-		var duration =(options.css3Duration)*0.1||30;/*持续时间*/
+		var duration = options.duration||300;
+		var css3Duration = options.css3Duration||options.duration||300;/*持续时间*/
+		
+		//var duration =(options.css3Duration)*0.1||30;/*持续时间*/
 		var step = options.step||1;
 		var stepTime = options.stepTime||1;
 		var tween = options.tween||'Linear';/*tween算子*/
-		var variation = 800;/*透明目的值*/
+		var variation = 100;/*透明目的值*/
 		var delay = options.delay||5000;/*两张切换的延迟*/
 		var sliderID = options.sliderID;/**/
+
+		/*controller*/
+		var controllerPrefix = options.controllerPrefix;
+		var controllerOnClass = options.controllerOnClass;
 		
 		var fadingInFlag = 0;
 		var fadingOutFlag = 0;
 		
 		var preShown = 0;
 		
-		var venderAnimation = venderPrefix + "AnimationName";
-        var venderDuration = venderPrefix + "AnimationDuration";
-        var venderTiming = venderPrefix + "AnimationTimingFunction";
+		// var vendorAnimation = vendorPrefix + "AnimationName";
+  //       var vendorDuration = vendorPrefix + "AnimationDuration";
+  //       var vendorTiming = vendorPrefix + "AnimationTimingFunction";
 		
 		
 		/*正在演示的index*/
@@ -983,12 +1004,19 @@
 		
 		/*滑动元素容器*/
 		self.slideBox = [];
+		self.controllerBox = [];
 		
 		self.init = function() {
 			$(sliderID).element.style.position='relative';
 			for(var i = 0;i<totalItem;i++) {
-				self.slideBox[i]=$(prefix+i).element;
+				self.slideBox[i] = $(prefix+i).element;
+				self.slideBox[i].style.position = 'absolute';
+				self.slideBox[i].style.top = self.slideBox[i].style.left = 0;
+
+				self.controllerBox[i] = $(controllerPrefix + i).element;
+
 				if(i === 0) {
+					Ys.addClass(self.controllerBox[i],controllerOnClass);
 					$(self.slideBox[i]).show();
 					self.slideBox[i].style.opacity = 1;
 				}
@@ -1003,38 +1031,55 @@
 		var doFade = function(index,time,startOpacity,direction,callback) {
 			var opacityValue;
 			var timetemp = time;
-			opacityValue = Math.ceil(Tween.Quad.easeIn(timetemp,startOpacity,variation,duration));
-			if(Ys._isIE) {
+			opacityValue = Math.ceil(Tween.Linear(timetemp,startOpacity,variation,duration));
+			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
 				self.slideBox[index].style.filter ="alpha(opacity ="+opacityValue+")";
+				
 			}else {
 				self.slideBox[index].style.opacity = opacityValue/variation;
 			}
-			if(direction =='in') {timetemp+=step;}
-			if(direction =='out') {timetemp-=step;}
-			if(Math.abs(timetemp)<=duration) {
-				if(Ys._isIE&&opacityValue>=100) {
-					clearTimeout(fadeTimeoutID);
+			if(direction =='in') {
+				timetemp+=step;
+				if(Math.abs(timetemp)<=duration) {
+					// if(Ys._IEVersion !== undefined && Ys._IEVersion<=8 && opacityValue>=100) {
+					// 	clearTimeout(fadeinTimeoutID);
+					// 	if(typeof callback =='function')callback();
+					// }else {
+						fadeinTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
+					//}
+				}
+				else {
+					clearTimeout(fadeinTimeoutID);
 					if(typeof callback =='function')callback();
-				}else {
-					fadeTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
 				}
 			}
-			else {
-				clearTimeout(fadeTimeoutID);
-				if(typeof callback =='function')callback();
+			if(direction =='out') {
+				timetemp-=step;
+				
+				if(Math.abs(timetemp)<=duration) {
+					// if(Ys._isIE&&opacityValue>=100) {
+					// 	clearTimeout(fadeoutTimeoutID);
+					// 	if(typeof callback =='function')callback();
+					// }else {
+						fadeoutTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
+					// }
+				}
+				else {
+					clearTimeout(fadeoutTimeoutID);
+					if(typeof callback =='function')callback();
+				}
 			}
+			
 		};
 		
 		/*单次淡出效果*/
 		self.fadeOut = function(index,callback) {
-			
-			try {
-				$(self.slideBox[index]).show();
-				self.slideBox[index].style.opacity = 1;
-				
-			}catch(e) {
+			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
 				self.slideBox[index].style.filter ="alpha(opacity = 100)";
+			} else {
+				self.slideBox[index].style.opacity = 1;		
 			}
+			$(self.slideBox[index]).show();
 			doFade(index,0,variation,'out',function() {
 				if(typeof callback =='function')callback();
 			});
@@ -1043,45 +1088,50 @@
 		/*单次淡入效果*/
 		self.fadeIn = function(index,callback) {
 			
-				try {
-					self.slideBox[index].style.opacity = 0;
-					$(self.slideBox[index]).show();
-				}catch(e) {
-					self.slideBox[index].style.filter ="alpha(opacity = 0)";
-				}
+			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
+				self.slideBox[index].style.filter ="alpha(opacity = 0)";
+			} else {
+				self.slideBox[index].style.opacity = 0;
+			}
+			$(self.slideBox[index]).show();
 			
-				doFade(index,0,0,'in',function() {
-					if(typeof callback =='function')callback();
-				});
+			doFade(index,0,0,'in',function() {
+				if(typeof callback =='function')callback();
+			});
 		};
 		
 		/*呈现标识符为index的元素*/
 		self.show = function(index,callback) {
-			if(self.onShow == index||fadingInFlag == 1)return false;
+			if(self.onShow == index || fadingInFlag == 1 || fadingOutFlag==1)return false;
 			fadingInFlag = 1;
+			fadingOutFlag = 1;
 			preShown = self.onShow;
 			self.onShow = index;
-			if(venderPrefix) {
-			/*浏览器支持css3时渐变*/
-				$(self.slideBox[index]).show();
-				self.slideBox[index].style[venderAnimation]="fadeIn";
-				self.slideBox[preShown].style[venderAnimation]="fadeOut";
-				self.slideBox[index].style[venderTiming] = self.slideBox[preShown].style[venderTiming]="ease-out";
-				self.slideBox[index].style[venderDuration] = self.slideBox[preShown].style[venderDuration] = css3Duration+"ms";
+			/*controller切换*/
+			Ys.addClass(self.controllerBox[index],controllerOnClass);
+			Ys.removeClass(self.controllerBox[preShown],controllerOnClass);
+			/*if(vendorPrefix) {
+			浏览器支持css3时渐变*/
+				/*使用关键帧$(self.slideBox[index]).show();
+				self.slideBox[index].style[vendorAnimation]="fadeIn";
+				self.slideBox[preShown].style[vendorAnimation]="fadeOut";
+				self.slideBox[index].style[vendorTiming] = self.slideBox[preShown].style[vendorTiming]="ease-out";
+				self.slideBox[index].style[vendorDuration] = self.slideBox[preShown].style[vendorDuration] = css3Duration+"ms";
 				self.slideBox[preShown].style.zIndex = 9;
 				self.slideBox[index].style.zIndex = 10;
-				Ys.addEventListener(self.slideBox[index],venderAnimationEnd,function end() {
+				Ys.addEventListener(self.slideBox[index],vendorAnimationEnd,function end() {
 					self.slideBox[index].style.opacity = 1;
 					self.slideBox[preShown].style.opacity = 0;
 					$(self.slideBox[preShown]).hide();
-					self.slideBox[index].style[venderAnimation] = self.slideBox[preShown].style[venderAnimation]="";
-					self.slideBox[index].style[venderTiming] = self.slideBox[preShown].style[venderTiming]="";
-					self.slideBox[index].style[venderDuration] = self.slideBox[preShown].style[venderDuration]="";
-					self.slideBox[index].removeEventListener(venderTransitionEnd,end);
+					self.slideBox[index].style[vendorAnimation] = self.slideBox[preShown].style[vendorAnimation]="";
+					self.slideBox[index].style[vendorTiming] = self.slideBox[preShown].style[vendorTiming]="";
+					self.slideBox[index].style[vendorDuration] = self.slideBox[preShown].style[vendorDuration]="";
+					self.slideBox[index].removeEventListener(vendorTransitionEnd,end);
 					fadingInFlag = 0;
 					if(typeof callback === 'function')callback();
 				});
-			}else {
+				
+			} else {*/
 				/*浏览器不支持css3时的渐变*/
 				self.slideBox[preShown].style.zIndex = 9;
 				self.slideBox[index].style.zIndex = 10;
@@ -1090,7 +1140,13 @@
 					fadingInFlag = 0;
 					if(typeof callback =='function')callback();
 				});
-			}
+
+				self.fadeOut(preShown,function() {
+					$(self.slideBox[preShown]).hide();
+					fadingOutFlag = 0;
+					if(typeof callback =='function')callback();
+				});
+			/*}*/
 		};
 		
 		self.previous = function(callback) {
