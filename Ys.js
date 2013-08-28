@@ -259,7 +259,6 @@
 		
 		var send = function() {
 			
-			
 			self.Ajax.open(options.type, options.url, options.async);
 		
 			if (options.type == 'GET') {
@@ -277,6 +276,7 @@
 			
 			
 			self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
+			self.Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
 			self.Ajax.send(options.data);
 			timer = setTimeout(function() {
 				if (typeof options.onTimeout == "function") options.onTimeout();
@@ -1005,7 +1005,7 @@
 		/*滑动元素容器*/
 		self.slideBox = [];
 		self.controllerBox = [];
-		
+
 		self.init = function() {
 			$(sliderID).element.style.position='relative';
 			for(var i = 0;i<totalItem;i++) {
@@ -1042,8 +1042,8 @@
 				timetemp+=step;
 				if(Math.abs(timetemp)<=duration) {
 					// if(Ys._IEVersion !== undefined && Ys._IEVersion<=8 && opacityValue>=100) {
-					// 	clearTimeout(fadeinTimeoutID);
-					// 	if(typeof callback =='function')callback();
+					// clearTimeout(fadeinTimeoutID);
+					// if(typeof callback =='function')callback();
 					// }else {
 						fadeinTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
 					//}
@@ -1058,8 +1058,8 @@
 				
 				if(Math.abs(timetemp)<=duration) {
 					// if(Ys._isIE&&opacityValue>=100) {
-					// 	clearTimeout(fadeoutTimeoutID);
-					// 	if(typeof callback =='function')callback();
+					// clearTimeout(fadeoutTimeoutID);
+					// if(typeof callback =='function')callback();
 					// }else {
 						fadeoutTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
 					// }
@@ -1075,9 +1075,9 @@
 		/*单次淡出效果*/
 		self.fadeOut = function(index,callback) {
 			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
-				self.slideBox[index].style.filter ="alpha(opacity = 100)";
+				self.slideBox[index].style.filter ="Alpha(opacity = 100)";
 			} else {
-				self.slideBox[index].style.opacity = 1;		
+				self.slideBox[index].style.opacity = 1;
 			}
 			$(self.slideBox[index]).show();
 			doFade(index,0,variation,'out',function() {
@@ -1087,7 +1087,6 @@
 		
 		/*单次淡入效果*/
 		self.fadeIn = function(index,callback) {
-			
 			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
 				self.slideBox[index].style.filter ="alpha(opacity = 0)";
 			} else {
@@ -1192,7 +1191,9 @@
 		
 		self.init();
 		
-		self.play();
+		playTimeoutID = setTimeout(function() {
+				self.next(function() { self.play();});
+			},delay);
 	};
 	
 	/*表单验证组件*/
@@ -1265,9 +1266,10 @@
 			asyncPost:options.asyncPost||'true',
 			toVerifyItems:options.toVerifyItems,
 			itemsWrap:options.itemsWrap||'',
-			infoWrap:options.infoWrap||'',
+			infoWrapIDs:options.infoWrapIDs||'',
 			verifyType:options.verifyType,
-			errorInfo:options.errorInfo||''
+			errorInfo:options.errorInfo||'',
+			submit:options.submit||function(form){form.submit();}
 		};
 		
 		self.form =$(options.formId).element;
@@ -1288,27 +1290,41 @@
 				if(typeof(options.itemsWrap[j])=='undefined') {
 					self.itemsWrap[j] = self.toVerifyItems[j].parentNode;
 				}
-				if(typeof(options.infoWrap[j])=='undefined') {
-					self.infoWrap[j] = $(self.toVerifyItems[j].id+'_info').element;
+				if(typeof(options.infoWrapIDs[j])!='undefined') {
+					self.infoWrap[j] = $(options.infoWrapIDs[j]).element;
 				}
+
+				Ys.addEventListener(self.toVerifyItems[j],'focus',function(j) {
+					return function(){
+						Ys.addClass(self.itemsWrap[j],'focus');
+						Ys.addClass(self.toVerifyItems[j],'focus');
+					};
+				}(j));
+
+				Ys.addEventListener(self.toVerifyItems[j],'blur',function(j) {
+					return function(){
+						Ys.removeClass(self.itemsWrap[j],'focus');
+						Ys.removeClass(self.toVerifyItems[j],'focus');
+						checkOnce(j);
+					};
+				}(j));
 			}
 			
-			for(var i = 0;i<options.toVerifyItems.length;i++) {
-				
-				Ys.addEventListener(self.toVerifyItems[i],'blur',function(i) {
-					return function(){
-						checkOnce(i);
-					};
-				}(i));
-			}
 			
 			Ys.addEventListener(self.form,'submit',function(e) {
+				Ys.stopDefault(e);
+				var ok = true;
 				for(var i = 0;i<options.toVerifyItems.length;i++) {
 					if(self.validValue[i] === false) {
 						if(!checkOnce(i)){
-							Ys.stopDefault(e);
+							ok = false;
 						}
 					}
+				}
+				if(ok === true){
+					options.submit(self.form);
+				} else {
+					return false;
 				}
 			});
 		};
