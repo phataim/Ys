@@ -116,6 +116,7 @@
 	
 	Ys.addEventListener = function(element,type,fn) {
 		if(typeof element == 'undefined') return false;
+
 		if(element.addEventListener) {
 			element.addEventListener(type,fn,false);
 		}
@@ -132,6 +133,8 @@
 					return;
 				}
 			}
+			//propertychange事件统一为input事件
+			if(type == 'input')type = 'propertychange';
 			var nestFn = function() {
 				fn.apply(element,arguments);
 			};
@@ -166,6 +169,8 @@
 					break;
 				}
 			}
+			//propertychange事件统一为input事件
+			if(type == 'input')type = 'propertychange';
 			if(nestFn) {
 			element.detachEvent('on'+type,nestFn);
 			}
