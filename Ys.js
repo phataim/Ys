@@ -15,11 +15,11 @@
 	
 	
 	/*类jquery实现*/
-	var F=function(id) {
+	var F = function(id) {
 		return this.getElementById(id);
 	};
 
-	F.prototype.getElementById=function(id) {
+	F.prototype.getElementById = function(id) {
 		if(typeof(id) === "object") {
 			this.element = id;
 		} else {
@@ -28,15 +28,32 @@
 		return this;
 	};
 
-	F.prototype.hide=function() {
+	F.prototype.bind =function(type,fn) {
+		Ys.addEventListener(this.element,type,fn);
+		return this;
+	};
+
+	F.prototype.hide = function() {
 		this.element.style.display = "none";
+		return this;
 	};
 
-	F.prototype.show=function() {
+	F.prototype.show = function() {
 		this.element.style.display = "block";
+		return this;
 	};
 
-	F.prototype.element=function() {
+	F.prototype.addClass = function(className) {
+		Ys.addClass(this.element,className);
+		return this;
+	};
+
+	F.prototype.removeClass = function(className) {
+		Ys.removeClass(this.element,className);
+		return this;
+	};
+
+	F.prototype.element = function() {
 		return this.element;
 	};
 		
@@ -203,14 +220,15 @@
 	
 	Ys.removeClass = function(element,className) {
 		var classArray = null;
-
+		var newClassArray = [];
+		var c = false;
 		try {
 			classArray = element.className.split(' ');
 			for(var i = 0;i<classArray.length;i++) {
-				if(classArray[i] == className)classArray[i] = '';
+				if(classArray[i] !== className)newClassArray.push(classArray[i]);
 			}
-			element.className = classArray.join(' ');
 
+			element.className = newClassArray.join(' ');
 		}catch(e) {}
 	};
 	
@@ -991,8 +1009,8 @@
 		var sliderID = options.sliderID;/**/
 
 		/*controller*/
-		var controllerPrefix = options.controllerPrefix;
-		var controllerOnClass = options.controllerOnClass;
+		var controllerPrefix = options.controllerPrefix || null;
+		var controllerOnClass = options.controllerOnClass || null;
 		
 		var fadingInFlag = 0;
 		var fadingOutFlag = 0;
@@ -1018,8 +1036,14 @@
 				self.slideBox[i].style.position = 'absolute';
 				self.slideBox[i].style.top = self.slideBox[i].style.left = 0;
 
-				self.controllerBox[i] = $(controllerPrefix + i).element;
-
+				if(controllerPrefix !== null) {
+					self.controllerBox[i] = $(controllerPrefix + i).element;
+					$(controllerPrefix + i).bind("click",function(index){
+						return function() {
+							self.goto(index);
+						};
+					}(i));
+				}
 				if(i === 0) {
 					Ys.addClass(self.controllerBox[i],controllerOnClass);
 					$(self.slideBox[i]).show();
@@ -1244,27 +1268,6 @@
 			letter_l:"^[a-z]+$",					//小写字母
 			idcard:"^[1-9]([0-9]{14}|[0-9]{17})$"	//身份证
 		};
-	
-		function matchStr(regexEnum,str,rgExp) {
-			if(!regexEnum[rgExp])return false;
-			if(str.match(regexEnum[rgExp]) === null)return false;
-			return true;
-		}
-		
-		function checkOnce(index) {
-			if(!matchStr(self.regexEnum,self.toVerifyItems[index].value,options.verifyType[index])) {
-				Ys.removeClass(self.itemsWrap[index],'right');
-				Ys.addClass(self.itemsWrap[index],'wrong');
-				self.infoWrap[index].innerHTML = options.errorInfo[index];
-				return false;
-			}else {
-				Ys.removeClass(self.itemsWrap[index],'wrong');
-				Ys.addClass(self.itemsWrap[index],'right');
-				self.infoWrap[index].innerHTML = '';
-				self.validValue[index] = true;
-				return true;
-			}
-		}
 		
 		options = {
 			formId:options.formId||'form',
@@ -1274,6 +1277,8 @@
 			infoWrapIDs:options.infoWrapIDs||'',
 			verifyType:options.verifyType,
 			errorInfo:options.errorInfo||'',
+			itemWrongFn:options.itemWrongFn||function(){},
+			itemRightFn:options.itemRightFn||function(){},
 			submit:options.submit||function(form){form.submit();}
 		};
 		
@@ -1282,6 +1287,36 @@
 		self.itemsWrap = [];
 		self.infoWrap = [];
 		self.validValue = [];
+
+		function matchStr(regexEnum,str,rgExp) {
+			if(!regexEnum[rgExp])return false;
+			if(str.match(regexEnum[rgExp]) === null)return false;
+			return true;
+		}
+		
+		function checkOnce(index) {
+			if(self.toVerifyItems[index].value !== '')Ys.addClass(self.itemsWrap[index],'notempty');
+			else Ys.removeClass(self.itemsWrap[index],'notempty');
+			if(!matchStr(self.regexEnum,self.toVerifyItems[index].value,options.verifyType[index])) {
+				Ys.removeClass(self.itemsWrap[index],'right');
+				Ys.addClass(self.itemsWrap[index],'wrong');
+				Ys.addClass(self.infoWrap[index],'active');
+				self.infoWrap[index].innerHTML = options.errorInfo[index];
+				self.validValue[index] = false;
+				options.itemWrongFn(index,self.toVerifyItems[index],self.infoWrap[index]);
+				return false;
+			}else {
+				Ys.removeClass(self.itemsWrap[index],'wrong');
+				Ys.addClass(self.itemsWrap[index],'right');
+				self.infoWrap[index].innerHTML = '';
+				Ys.removeClass(self.infoWrap[index],'active');
+				self.validValue[index] = true;
+				options.itemRightFn(index,self.toVerifyItems[index],self.infoWrap[index]);
+				return true;
+			}
+		}
+		
+		
 		
 		self.init = function() {
 			
