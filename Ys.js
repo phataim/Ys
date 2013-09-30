@@ -1,1480 +1,1529 @@
 ;(function(window, undefined) {
-	
-	"use strict";
-	
-	var Ys = {};
-	
-	/*网站配及=置及用户信息*/
-	Ys.config = {};
-	
-	/*快速选择器*/
-	var $=function(id) {
-		//return document.getElementById(id);
-		return new F(id);
-	};
-	
-	
-	/*类jquery实现*/
-	var F = function(id) {
-		return this.getElementById(id);
-	};
+    
+    "use strict";
+    
+    var Ys = {};
+    
+    /*网站配及=置及用户信息*/
+    Ys.config = {};
+    
+    /*快速选择器*/
+    var $=function(id) {
+        //return document.getElementById(id);
+        return new F(id);
+    };
 
-	F.prototype.getElementById = function(id) {
-		if(typeof(id) === "object") {
-			this.element = id;
-		} else {
-			this.element = document.getElementById(id);
-		}
-		return this;
-	};
+    /*类jquery实现*/
+    var F = function(id) {
+        return this.getElementById(id);
+    };
 
-	F.prototype.bind =function(type,fn) {
-		Ys.addEventListener(this.element,type,fn);
-		return this;
-	};
+    F.prototype.getElementById = function(id) {
+        if(typeof(id) === "object") {
+            this.element = id;
+        } else {
+            this.element = document.getElementById(id);
+        }
+        return this;
+    };
 
-	F.prototype.hide = function() {
-		this.element.style.display = "none";
-		return this;
-	};
+    F.prototype.bind =function(type,fn) {
+        Ys.addEventListener(this.element,type,fn);
+        return this;
+    };
 
-	F.prototype.show = function() {
-		this.element.style.display = "block";
-		return this;
-	};
+    F.prototype.hide = function() {
+        this.element.style.display = "none";
+        return this;
+    };
 
-	F.prototype.addClass = function(className) {
-		Ys.addClass(this.element,className);
-		return this;
-	};
+    F.prototype.show = function() {
+        this.element.style.display = "block";
+        return this;
+    };
 
-	F.prototype.removeClass = function(className) {
-		Ys.removeClass(this.element,className);
-		return this;
-	};
+    F.prototype.addClass = function(className) {
+        Ys.addClass(this.element,className);
+        return this;
+    };
 
-	F.prototype.element = function() {
-		return this.element;
-	};
-		
-	var $class = function(className) {
-		return document.getElementsByClassName(className);
-	};
-	
-	Ys.$=$;
+    F.prototype.removeClass = function(className) {
+        Ys.removeClass(this.element,className);
+        return this;
+    };
 
-	Ys.getElementsByClassName = function (searchClass, node,tag) {
-		var result=[];
-		if(document.getElementsByClassName) {
-			var nodes =  (node || document).getElementsByClassName(searchClass);
-			for(var i=0 ;node = nodes[i++]; ) {
-				if(tag !== "*" && node.tagName === tag.toUpperCase()) {
-					result.push(node);
-				}
-			}
-			return result;
-		}else{
-			node = node || document;
-			tag = tag || "*";
-			var classes = searchClass.split(" "),
-			elements = (tag === "*" && node.all)? node.all : node.getElementsByTagName(tag),
-			patterns = [],
-			current,
-			match;
-			for( var l = 0;l<classes.length;l++) {
-				patterns.push(new RegExp("(^|\\s)" + classes[l] + "(\\s|$)"));
-			}
-			for( var j = 0;j<elements.length;j++) {
-				current = elements[j];
-				match = false;
-				for(var k=0, kl=patterns.length; k<kl; k++){
-					match = patterns[k].test(current.className);
-					if (!match)  break;
-			}
-			if (match)  result.push(current);
-		}
-		return result;
-		}
-	};
+    F.prototype.element = function() {
+        return this.element;
+    };
 
-	/*这里借用一下jquery的函数，返回浏览器的vendor前缀*/
-	var getVendorPrefix = function(index) {
-		var body, i, style, transition, vendor ,transEndEventNames,animationEndEventNames;
-		body = document.body || document.documentElement;
-		style = body.style;
-		transition = "transition";
-		vendor = ["Moz", "Webkit", "O", "ms", "Khtml"];
-		transEndEventNames = ["transitionend", "webkitTransitionEnd", "oTransitionEnd otransitionend", "MSTransitionEnd", "transitionend"];
-		animationEndEventNames = ["animationend", "webkitAnimationEnd", "oAnimationEnd oanimationend", "MSAnimationEnd", "animationend"];
-		transition = transition.charAt(0).toUpperCase() + transition.substr(1);
-		i = 0;
-		while (i < vendor.length) {
-			if (typeof style[vendor[i] + transition] ===  "string") {
-				if(index ==1)return vendor[i];
-				if(index ==2)return transEndEventNames[i];
-				if(index ==3)return animationEndEventNames[i];
-			}
-			i++;
-		}
-		return false;
-	};
-	
-	
-	var vendorPrefix = getVendorPrefix(1);
-	var vendorTransitionEnd = getVendorPrefix(2);
-	var vendorAnimationEnd = getVendorPrefix(3);
-	
-	/*判断是否为ie浏览器及其版本*/
-	Ys._IEVersion = (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE6.0")?6:
-		(navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE7.0")?7:
-		(navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE8.0")?8:
-		(navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE9.0")?9:
-		(navigator.appName == "Microsoft Internet Explorer")?10:undefined;
-	
-	Ys.addEventListener = function(element,type,fn) {
-		if(typeof element == 'undefined') return false;
+    F.prototype.attr = function(attribute) {
+        return this.element.getAttribute(attribute);
+    };
 
-		if(element.addEventListener) {
-			element.addEventListener(type,fn,false);
-		}
-		else if(element.attachEvent) {
-		//将事件缓冲到该标签上,已解决this指向window(现fn内this指向element)和移除匿名事件问题
-			var _EventRef ='_'+type+'EventRef';
-			if(!element[_EventRef]) {
-				element[_EventRef]=[];
-			}
-			var _EventRefs = element[_EventRef];
-			var index;
-			for(index in _EventRefs) {
-				if(_EventRefs[index]['realFn'] == fn) {
-					return;
-				}
-			}
-			//propertychange事件统一为input事件
-			if(type == 'input')type = 'propertychange';
-			var nestFn = function() {
-				fn.apply(element,arguments);
-			};
-			element[_EventRef].push( {'realFn':fn,'nestFn':nestFn});
-			element.attachEvent('on'+type,nestFn);
-		}else {
-			element['on'+type] = fn;
-		}
-	};
-	
-	Ys.removeListener = function(element,type,fn) {
-		if(typeof element == 'undefined') return false;
-		if(element.removeEventListener) {
-			element.removeEventListener(type,fn,false);
-		}
-		else if(element.detachEvent) {
-			var _EventRef ='_'+type+'EventRef';
-			if(!element[_EventRef]) {
-				element[_EventRef]=[];
-			}
-			var _EventRefs = element[_EventRef];
-			var index;
-			var nestFn;
-			for(index in _EventRefs) {
-				if(_EventRefs[index]['realFn'] == fn) {
-					nestFn = _EventRefs[index]['nestFn'];
-					if(index ==_EventRefs.length-1) {
-						element[_EventRef] = _EventRefs.slice(0,index);
-					}else {
-						element[_EventRef] = _EventRefs.slice(0,index).concat(_EventRefs.slice(index+1,_EventRefs.length-1));
-					}
-					break;
-				}
-			}
-			//propertychange事件统一为input事件
-			if(type == 'input')type = 'propertychange';
-			if(nestFn) {
-			element.detachEvent('on'+type,nestFn);
-			}
-		} else {
-			element['on'+type] = null;
-		}
-	};
-	
-	Ys.stopDefault = function(e) {
-		if (e && e.preventDefault) {//如果是FF下执行这个
-			e.preventDefault();
-		} else {
-			window.event.returnValue = false;//如果是IE下执行这个
-		}
-		return false;
-	};
-	
-	Ys.addClass = function(element,className) {
-		var classArray = null;
-		var c = false;
-		try {
-			classArray = element.className.split(' ');
-			for(var i = 0;i<classArray.length;i++) {
-				if(classArray[i] == className)c = true;
-			}
-			if(!c)classArray.push(className);
-			element.className = classArray.join(' ');
-		}catch(e) {}
-	};
-	
-	Ys.removeClass = function(element,className) {
-		var classArray = null;
-		var newClassArray = [];
-		var c = false;
-		try {
-			classArray = element.className.split(' ');
-			for(var i = 0;i<classArray.length;i++) {
-				if(classArray[i] !== className)newClassArray.push(classArray[i]);
-			}
+    F.prototype.append = function(html) {
+        this.element.innerHTML += html;
+        return this;
+    };
 
-			element.className = newClassArray.join(' ');
-		}catch(e) {}
-	};
-	
-	
-	/**
-	 * 2012.8.20
-	 *
-	 * ajax控件
-	 *
-	 *
-	 */
-	
-	Ys.ajax = function(options) {
-		
-		if(typeof options !=='object')options = {};
-		
-		options = {
-			type: options.type || 'POST',
-			url: options.url || '',
-			async: options.async || 'ture',
-			timeout: options.timeout || 5000,
-			onComplete: options.onComplete || function() {},
-			onError: options.onError || function() {},
-			onSuccess: options.onSuccess || function() {},
-			onSend: options.onSend || function() {},
-			onTimeout: options.onTimeout || function() {},
-			acceptdatatype: options.acceptdatatype || 'json',
-			data: options.data || '',
-			hasFile:options.hasFile|| false,
-			formDom:options.formDom|| null,
-			files:options.files || null
-		};
-		
-		
-		var self = this;
-		
-		self.Ajax = null;
-		
-		var createAjaxRequest = function() {
-			if (typeof XMLHttpRequest == 'undefined')
-			{
-				self.Ajax = new ActiveXObject("Microsoft.XMLHTTP");
-			} else {
-				self.Ajax = new XMLHttpRequest();
-			}
-		};
-		
-		/*超时时间*/
-		var timer;
-		
-		
-		var send = function() {
-			
-			self.Ajax.open(options.type, options.url, options.async);
-		
-			if (options.type == 'GET') {
-				self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
-				self.Ajax.send();
-			}else {
-				switch (options.acceptdatatype) {
-				case 'json':
-					self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
-					break;
-				default:
-					self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
-				}
-			}
-			
-			
-			self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
-			self.Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-			self.Ajax.send(options.data);
-			timer = setTimeout(function() {
-				if (typeof options.onTimeout == "function") options.onTimeout();
-				if (self.Ajax) {
-					self.Ajax.abort();
-					self.Ajax = null;
-				}
-				return 0;
-			},options.timeout);
-		};
-		
-		
-		
-		
-		var stateHandler = function() {
-			switch (self.Ajax.readyState) {
-				case 1:
-					break;
-				case 2:options.onSend();
-					break;
-				case 3:
-					break;
-				case 4:
-					try {
-					switch (self.Ajax.status) {
-						case 200:
-							if(timer)clearTimeout(timer);
-							if(typeof options.onSuccess ===  'function')options.onSuccess(self.Ajax.responseText);
-							if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
-							break;
-						case 404:
-							if (timer) clearTimeout(timer);
-							if(typeof options.onError ===  'function')options.onError(self.Ajax.responseText);
-							options.onComplete(Ajax.responseText);
-							break;
-						default:
-							if (timer) clearTimeout(timer);
-							if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
-						}
-					}catch(e) {}
-					break;
-				default:
-					break;
-			}
-		};
-		
-		
-		
-		var XHR2Send = function(file) {
-			
-			if(!file.files.length)
-			return;
-				
-			var formData = new FormData();
-			//XMLHttpRequest2 对象，支持上传文件
-			self.xhr2 = new XMLHttpRequest();
-			//已上传字节数
-			var uploadedBytes = 0;
-			//文件总字节数
-			var totalBytes = 0;
-			formData.append(file.name,file.files[0]);
-			Ys.addEventListener(self.xhr2.upload,'progress',function(e) {
-				if (e.lengthComputable) {
-					uploadedBytes = e.loaded;
-					totalBytes = e.total;
-					var percentComplete = Math.round(uploadedBytes * 100 / totalBytes),
-					//已上传文件大小
-					bytesTransfered = '';
-					if (uploadedBytes > 1024 * 1024)bytesTransfered = Math.round(uploadedBytes * 100 / (1024 * 1024)) / 100 + 'MB';
-					else bytesTransfered = Math.round(uploadedBytes * 100 / 1024) / 100 + 'KB';
-					//console.log(bytesTransfered);
-					//上传完成，显示上传文件信息
-					if(percentComplete ===  100) {}
-				} else {
-				}
-			});
-			
-			Ys.addEventListener(self.xhr2,'load',function(e) {
-				if(typeof(options.onSuccess)=='function') {
-					options.onSuccess(e.target.responseText);
-				}
-				self.destruct();
-			});
-			Ys.addEventListener(self.xhr2,'abort',function(e) {
-				self.destruct();
-			});
-			Ys.addEventListener(self.xhr2,'error',function(e) {
-				if(typeof(options.onError)=='function') {
-					options.onError(e.target.responseText);
-				}
-				self.destruct();
-			});
-			
-				
-			self.xhr2.open(options.type,options.url,options.async);
-			self.xhr2.send(formData);
 
-		};
+    var defer = function () {
+        var queue = [], value, i, callback;
+        return {
+            resolve: function ( _value ) {
+                value = _value;
+                for ( i = -1; callback = queue[++i]; ) {
+                    callback( value );
+                }
+                queue = undefined;
+            },
+            then: function ( _callback ) {
+                if ( queue ) {
+                    queue.push( _callback );
+                } else {
+                    callback( value );
+                }
+            }
+        };
+    };
+        
+    var $class = function(className) {
+        return document.getElementsByClassName(className);
+    };
+    
+    Ys.$=$;
 
-		var createIframe = function(id, uri) {
-			//create frame
+    Ys.documentComplete = function(fn) {
+        document.onreadystatechange = function() {
+            if(document.readyState === "complete")
+            {
+                if(typeof(fn) === 'function')fn();
+                //console.log(Ys.$('password').element.value);
+            }
+        };
+    };
+
+    Ys.getElementsByClassName = function (searchClass, node,tag) {
+        var result=[];
+        if(document.getElementsByClassName) {
+            var nodes =  (node || document).getElementsByClassName(searchClass);
+            for(var i=0 ;node = nodes[i++]; ) {
+                if(tag !== "*" && node.tagName === tag.toUpperCase()) {
+                    result.push(node);
+                }
+            }
+            return result;
+        }else{
+            node = node || document;
+            tag = tag || "*";
+            var classes = searchClass.split(" "),
+            elements = (tag === "*" && node.all)? node.all : node.getElementsByTagName(tag),
+            patterns = [],
+            current,
+            match;
+            for( var l = 0;l<classes.length;l++) {
+                patterns.push(new RegExp("(^|\\s)" + classes[l] + "(\\s|$)"));
+            }
+            for( var j = 0;j<elements.length;j++) {
+                current = elements[j];
+                match = false;
+                for(var k=0, kl=patterns.length; k<kl; k++){
+                    match = patterns[k].test(current.className);
+                    if (!match)  break;
+            }
+            if (match)  result.push(current);
+        }
+        return result;
+        }
+    };
+
+    /*这里借用一下jquery的函数，返回浏览器的vendor前缀*/
+    var getVendorPrefix = function(index) {
+        var body, i, style, transition, vendor ,transEndEventNames,animationEndEventNames;
+        body = document.body || document.documentElement;
+        style = body.style;
+        transition = "transition";
+        vendor = ["Moz", "Webkit", "O", "ms", "Khtml"];
+        transEndEventNames = ["transitionend", "webkitTransitionEnd", "oTransitionEnd otransitionend", "MSTransitionEnd", "transitionend"];
+        animationEndEventNames = ["animationend", "webkitAnimationEnd", "oAnimationEnd oanimationend", "MSAnimationEnd", "animationend"];
+        transition = transition.charAt(0).toUpperCase() + transition.substr(1);
+        i = 0;
+        while (i < vendor.length) {
+            if (typeof style[vendor[i] + transition] ===  "string") {
+                if(index ==1)return vendor[i];
+                if(index ==2)return transEndEventNames[i];
+                if(index ==3)return animationEndEventNames[i];
+            }
+            i++;
+        }
+        return false;
+    };
+    
+    
+    var vendorPrefix = getVendorPrefix(1);
+    var vendorTransitionEnd = getVendorPrefix(2);
+    var vendorAnimationEnd = getVendorPrefix(3);
+    
+    /*判断是否为ie浏览器及其版本*/
+    Ys._IEVersion = (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE6.0")?6:
+        (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE7.0")?7:
+        (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE8.0")?8:
+        (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE9.0")?9:
+        (navigator.appName == "Microsoft Internet Explorer")?10:undefined;
+    
+    Ys.addEventListener = function(element,type,fn) {
+        if(typeof element == 'undefined') return false;
+
+        if(element.addEventListener) {
+            element.addEventListener(type,fn,false);
+        }
+        else if(element.attachEvent) {
+        //将事件缓冲到该标签上,已解决this指向window(现fn内this指向element)和移除匿名事件问题
+            var _EventRef ='_'+type+'EventRef';
+            if(!element[_EventRef]) {
+                element[_EventRef]=[];
+            }
+            var _EventRefs = element[_EventRef];
+            var index;
+            for(index in _EventRefs) {
+                if(_EventRefs[index]['realFn'] == fn) {
+                    return;
+                }
+            }
+            //propertychange事件统一为input事件
+            if(type == 'input')type = 'propertychange';
+            var nestFn = function() {
+                fn.apply(element,arguments);
+            };
+            element[_EventRef].push( {'realFn':fn,'nestFn':nestFn});
+            element.attachEvent('on'+type,nestFn);
+        }else {
+            element['on'+type] = fn;
+        }
+    };
+    
+    Ys.removeListener = function(element,type,fn) {
+        if(typeof element == 'undefined') return false;
+        if(element.removeEventListener) {
+            element.removeEventListener(type,fn,false);
+        }
+        else if(element.detachEvent) {
+            var _EventRef ='_'+type+'EventRef';
+            if(!element[_EventRef]) {
+                element[_EventRef]=[];
+            }
+            var _EventRefs = element[_EventRef];
+            var index;
+            var nestFn;
+            for(index in _EventRefs) {
+                if(_EventRefs[index]['realFn'] == fn) {
+                    nestFn = _EventRefs[index]['nestFn'];
+                    if(index ==_EventRefs.length-1) {
+                        element[_EventRef] = _EventRefs.slice(0,index);
+                    }else {
+                        element[_EventRef] = _EventRefs.slice(0,index).concat(_EventRefs.slice(index+1,_EventRefs.length-1));
+                    }
+                    break;
+                }
+            }
+            //propertychange事件统一为input事件
+            if(type == 'input')type = 'propertychange';
+            if(nestFn) {
+            element.detachEvent('on'+type,nestFn);
+            }
+        } else {
+            element['on'+type] = null;
+        }
+    };
+    
+    Ys.stopDefault = function(e) {
+        if (e && e.preventDefault) {//如果是FF下执行这个
+            e.preventDefault();
+        } else {
+            window.event.returnValue = false;//如果是IE下执行这个
+        }
+        return false;
+    };
+    
+    Ys.addClass = function(element,className) {
+        var classArray = null;
+        var c = false;
+        try {
+            classArray = element.className.split(' ');
+            for(var i = 0;i<classArray.length;i++) {
+                if(classArray[i] == className)c = true;
+            }
+            if(!c)classArray.push(className);
+            element.className = classArray.join(' ');
+        }catch(e) {}
+    };
+    
+    Ys.removeClass = function(element,className) {
+        var classArray = null;
+        var newClassArray = [];
+        var c = false;
+        try {
+            classArray = element.className.split(' ');
+            for(var i = 0;i<classArray.length;i++) {
+                if(classArray[i] !== className)newClassArray.push(classArray[i]);
+            }
+
+            element.className = newClassArray.join(' ');
+        }catch(e) {}
+    };
+    
+    
+    /**
+     * 2012.8.20
+     *
+     * ajax控件
+     *
+     *
+     */
+    
+    Ys.ajax = function(options) {
+        
+        if(typeof options !=='object')options = {};
+        
+        options = {
+            type: options.type || 'POST',
+            url: options.url || '',
+            async: options.async || 'ture',
+            timeout: options.timeout || 5000,
+            onComplete: options.onComplete || function() {},
+            onError: options.onError || function() {},
+            onSuccess: options.onSuccess || function() {},
+            onSend: options.onSend || function() {},
+            onTimeout: options.onTimeout || function() {},
+            acceptdatatype: options.acceptdatatype || 'json',
+            data: options.data || '',
+            hasFile:options.hasFile|| false,
+            formDom:options.formDom|| null,
+            files:options.files || null
+        };
+        
+        
+        var self = this;
+        
+        self.Ajax = null;
+        
+        var createAjaxRequest = function() {
+            if (typeof XMLHttpRequest == 'undefined')
+            {
+                self.Ajax = new ActiveXObject("Microsoft.XMLHTTP");
+            } else {
+                self.Ajax = new XMLHttpRequest();
+            }
+        };
+        
+        /*超时时间*/
+        var timer;
+        
+        
+        var send = function() {
+            
+            self.Ajax.open(options.type, options.url, options.async);
+        
+            if (options.type == 'GET') {
+                self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
+                self.Ajax.send();
+            }else {
+                switch (options.acceptdatatype) {
+                case 'json':
+                    self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
+                    break;
+                default:
+                    self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
+                }
+            }
+            
+            
+            self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
+            self.Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+            self.Ajax.send(options.data);
+            timer = setTimeout(function() {
+                if (typeof options.onTimeout == "function") options.onTimeout();
+                if (self.Ajax) {
+                    self.Ajax.abort();
+                    self.Ajax = null;
+                }
+                return 0;
+            },options.timeout);
+        };
+        
+        
+        
+        
+        var stateHandler = function() {
+            switch (self.Ajax.readyState) {
+                case 1:
+                    break;
+                case 2:options.onSend();
+                    break;
+                case 3:
+                    break;
+                case 4:
+                    try {
+                    switch (self.Ajax.status) {
+                        case 200:
+                            if(timer)clearTimeout(timer);
+                            if(typeof options.onSuccess ===  'function')options.onSuccess(self.Ajax.responseText);
+                            if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
+                            break;
+                        case 404:
+                            if (timer) clearTimeout(timer);
+                            if(typeof options.onError ===  'function')options.onError(self.Ajax.responseText);
+                            options.onComplete(Ajax.responseText);
+                            break;
+                        default:
+                            if (timer) clearTimeout(timer);
+                            if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
+                        }
+                    }catch(e) {}
+                    break;
+                default:
+                    break;
+            }
+        };
+        
+        
+        
+        var XHR2Send = function(file) {
+            
+            if(!file.files.length)
+            return;
+                
+            var formData = new FormData();
+            //XMLHttpRequest2 对象，支持上传文件
+            self.xhr2 = new XMLHttpRequest();
+            //已上传字节数
+            var uploadedBytes = 0;
+            //文件总字节数
+            var totalBytes = 0;
+            formData.append(file.name,file.files[0]);
+            Ys.addEventListener(self.xhr2.upload,'progress',function(e) {
+                if (e.lengthComputable) {
+                    uploadedBytes = e.loaded;
+                    totalBytes = e.total;
+                    var percentComplete = Math.round(uploadedBytes * 100 / totalBytes),
+                    //已上传文件大小
+                    bytesTransfered = '';
+                    if (uploadedBytes > 1024 * 1024)bytesTransfered = Math.round(uploadedBytes * 100 / (1024 * 1024)) / 100 + 'MB';
+                    else bytesTransfered = Math.round(uploadedBytes * 100 / 1024) / 100 + 'KB';
+                    //console.log(bytesTransfered);
+                    //上传完成，显示上传文件信息
+                    if(percentComplete ===  100) {}
+                } else {
+                }
+            });
+            
+            Ys.addEventListener(self.xhr2,'load',function(e) {
+                if(typeof(options.onSuccess)=='function') {
+                    options.onSuccess(e.target.responseText);
+                }
+                self.destruct();
+            });
+            Ys.addEventListener(self.xhr2,'abort',function(e) {
+                self.destruct();
+            });
+            Ys.addEventListener(self.xhr2,'error',function(e) {
+                if(typeof(options.onError)=='function') {
+                    options.onError(e.target.responseText);
+                }
+                self.destruct();
+            });
+            
+                
+            self.xhr2.open(options.type,options.url,options.async);
+            self.xhr2.send(formData);
+
+        };
+
+        var createIframe = function(id, uri) {
+            //create frame
             var frameId = 'iframe' + id;
             var iframeHtml = '<iframe id="' + frameId + '" name="' + frameId + '" style="position:absolute; top:-9999px; left:-9999px"';
-			if(window.ActiveXObject)
-			{
+            if(window.ActiveXObject)
+            {
                 if(typeof uri== 'boolean'){
-					iframeHtml += ' src="' + 'javascript:false' + '"';
-				}
-				else if(typeof uri== 'string'){
-					iframeHtml += ' src="' + uri + '"';
-				}
-			}
-			iframeHtml += ' />';
+                    iframeHtml += ' src="' + 'javascript:false' + '"';
+                }
+                else if(typeof uri== 'string'){
+                    iframeHtml += ' src="' + uri + '"';
+                }
+            }
+            iframeHtml += ' />';
 
-			jQuery(iframeHtml).appendTo(document.body);
+            jQuery(iframeHtml).appendTo(document.body);
 
-			//var tmp = document.createElement('div');
-			//document.body.insertBefore(tmp,document.body.firstChild);
-			//tmp.innerHTML=iframeHtml;
+            //var tmp = document.createElement('div');
+            //document.body.insertBefore(tmp,document.body.firstChild);
+            //tmp.innerHTML=iframeHtml;
 
             return $(frameId).element;
-		};
+        };
 
-		var createForm = function(id, fileElement, data) {
-			var formId = 'Form' + id;
-			var fileId = 'File' + id;
-			var form = jQuery('<form  action="" method="POST" name="' + formId + '" id="' + formId + '" enctype="multipart/form-data"></form>');	
-			if(data)
-			{
-				for(var i in data)
-				{
-					jQuery('<input type="hidden" name="' + i + '" value="' + data[i] + '" />').appendTo(form);
-				}			
-			}		
-			var oldElement = jQuery(fileElement);
-			var newElement = jQuery(oldElement).clone();
-			jQuery(oldElement).attr('id', fileId);
-			jQuery(oldElement).before(newElement);
-			jQuery(oldElement).appendTo(form);
+        var createForm = function(id, fileElement, data) {
+            var formId = 'Form' + id;
+            var fileId = 'File' + id;
+            var form = jQuery('<form  action="" method="POST" name="' + formId + '" id="' + formId + '" enctype="multipart/form-data"></form>');    
+            if(data)
+            {
+                for(var i in data)
+                {
+                    jQuery('<input type="hidden" name="' + i + '" value="' + data[i] + '" />').appendTo(form);
+                }            
+            }        
+            var oldElement = jQuery(fileElement);
+            var newElement = jQuery(oldElement).clone();
+            jQuery(oldElement).attr('id', fileId);
+            jQuery(oldElement).before(newElement);
+            jQuery(oldElement).appendTo(form);
 
-			//set attributes
-			jQuery(form).css('position', 'absolute');
-			jQuery(form).css('top', '-1200px');
-			jQuery(form).css('left', '-1200px');
-			jQuery(form).appendTo('body');		
-			return form;
-		};
+            //set attributes
+            jQuery(form).css('position', 'absolute');
+            jQuery(form).css('top', '-1200px');
+            jQuery(form).css('left', '-1200px');
+            jQuery(form).appendTo('body');        
+            return form;
+        };
 
-		var useIframeInit = function(){
-			var id = new Date().getTime();
-			self.iframe = createIframe(id);
-			self.form = createForm(id,options.files,(typeof(options.data)=='undefined'?false:options.data));
-			var frameId = 'iframe' + id;
-			var formId = 'form' + id;
+        var useIframeInit = function(){
+            var id = new Date().getTime();
+            self.iframe = createIframe(id);
+            self.form = createForm(id,options.files,(typeof(options.data)=='undefined'?false:options.data));
+            var frameId = 'iframe' + id;
+            var formId = 'form' + id;
 
-			var requestDone = false;
-			// Create the request object
-			var xml = {};
-			// Wait for a response to come back
-			var uploadCallback = function(isTimeout) {
-				var io = document.getElementById(frameId);
-				try {
-					if(io.contentWindow) {
-						xml.responseText = io.contentWindow.document.body?io.contentWindow.document.body.innerHTML:null;
-						xml.responseXML = io.contentWindow.document.XMLDocument?io.contentWindow.document.XMLDocument:io.contentWindow.document;
-					} else if(io.contentDocument) {
-						xml.responseText = io.contentDocument.document.body?io.contentDocument.document.body.innerHTML:null;
-						xml.responseXML = io.contentDocument.document.XMLDocument?io.contentDocument.document.XMLDocument:io.contentDocument.document;
-					}
-				} catch(e) {
-					//jQuery.handleError(s, xml, null, e);
-				}
-				if ( xml || isTimeout == "timeout") {
-					requestDone = true;
-					var status;
-					try {
-						status = isTimeout != "timeout" ? "success" : "error";
-						// Make sure that the request was successful or notmodified
-						if ( status != "error" ) {
-							// process the data (runs the xml through httpData regardless of callback)
-							var data = xml.responseText ? xml.responseText : xml.responseXML;
-							// If a local callback was specified, fire it and pass it the data
-							if ( options.onSuccess ) options.onSuccess( data, status );
+            var requestDone = false;
+            // Create the request object
+            var xml = {};
+            // Wait for a response to come back
+            var uploadCallback = function(isTimeout) {
+                var io = document.getElementById(frameId);
+                try {
+                    if(io.contentWindow) {
+                        xml.responseText = io.contentWindow.document.body?io.contentWindow.document.body.innerHTML:null;
+                        xml.responseXML = io.contentWindow.document.XMLDocument?io.contentWindow.document.XMLDocument:io.contentWindow.document;
+                    } else if(io.contentDocument) {
+                        xml.responseText = io.contentDocument.document.body?io.contentDocument.document.body.innerHTML:null;
+                        xml.responseXML = io.contentDocument.document.XMLDocument?io.contentDocument.document.XMLDocument:io.contentDocument.document;
+                    }
+                } catch(e) {
+                    //jQuery.handleError(s, xml, null, e);
+                }
+                if ( xml || isTimeout == "timeout") {
+                    requestDone = true;
+                    var status;
+                    try {
+                        status = isTimeout != "timeout" ? "success" : "error";
+                        // Make sure that the request was successful or notmodified
+                        if ( status != "error" ) {
+                            // process the data (runs the xml through httpData regardless of callback)
+                            var data = xml.responseText ? xml.responseText : xml.responseXML;
+                            // If a local callback was specified, fire it and pass it the data
+                            if ( options.onSuccess ) options.onSuccess( data, status );
 
-						} //else console.log(e);//jQuery.handleError(s, xml, status);
-					} catch(e) {
-						status = "error";
-						//jQuery.handleError(s, xml, status, e);
-					}
+                        } //else console.log(e);//jQuery.handleError(s, xml, status);
+                    } catch(e) {
+                        status = "error";
+                        //jQuery.handleError(s, xml, status, e);
+                    }
 
-					// Process result
-					if ( options.onComplete )
-						options.onComplete(xml, status);
+                    // Process result
+                    if ( options.onComplete )
+                        options.onComplete(xml, status);
 
-					jQuery(io).unbind();
+                    jQuery(io).unbind();
 
-					setTimeout(function()
-									{	try {
-											jQuery(io).remove();
-											self.form.remove();
-										} catch(e) {
-											//console.log(e);
-											//jQuery.handleError(s, xml, null, e);
-										}							
+                    setTimeout(function()
+                                    {    try {
+                                            jQuery(io).remove();
+                                            self.form.remove();
+                                        } catch(e) {
+                                            //console.log(e);
+                                            //jQuery.handleError(s, xml, null, e);
+                                        }                            
 
-									}, 100);
+                                    }, 100);
 
-					xml = null;
-				}
-			};
-			// Timeout checker
-			if ( options.timeout > 0 ) {
-				setTimeout(function(){
-					// Check to see if the request is still happening
-					if( !requestDone ) uploadCallback( "timeout" );
-				}, options.timeout);
-			}
-			try {
-				self.form.attr('action', options.url);
-				self.form.attr('method', 'POST');
-				self.form.attr('target', frameId);
-				if(self.form.encoding) {
-					self.form.attr('encoding', 'multipart/form-data');
-				} else {
-					self.form.attr('enctype', 'multipart/form-data');
-				}
-				self.form.submit();
-			} catch(e) {
-				jQuery.handleError(s, xml, null, e);
-			}
-			jQuery('#' + frameId).load(uploadCallback);
-			return {abort: function () {}};
-		};
-		
-		
-		var iframeSend = function() {
-			
+                    xml = null;
+                }
+            };
+            // Timeout checker
+            if ( options.timeout > 0 ) {
+                setTimeout(function(){
+                    // Check to see if the request is still happening
+                    if( !requestDone ) uploadCallback( "timeout" );
+                }, options.timeout);
+            }
+            try {
+                self.form.attr('action', options.url);
+                self.form.attr('method', 'POST');
+                self.form.attr('target', frameId);
+                if(self.form.encoding) {
+                    self.form.attr('encoding', 'multipart/form-data');
+                } else {
+                    self.form.attr('enctype', 'multipart/form-data');
+                }
+                self.form.submit();
+            } catch(e) {
+                jQuery.handleError(s, xml, null, e);
+            }
+            jQuery('#' + frameId).load(uploadCallback);
+            return {abort: function () {}};
+        };
+        
+        
+        var iframeSend = function() {
+            
 
-		};
+        };
 
-		self.destruct = function() {
-			try{
-				self.iframe.src ='';
-				searchClassf.iframe.parentNode.removeChild(self.iframe);
-				self.iframe = null;
-				Ys.removeListener(self.xhr2.upload,'progress');
-				Ys.removeListener(self.xhr2,'load');
-				Ys.removeListener(self.xhr2,'abort');
-				Ys.removeListener(self.xhr2,'error');
-				self.xhr2 = null;
-			}catch(e){}
-		};
-		
-		var run = function() {
-			if(options.hasFile) {
-				/*html5上传*/
-				if(typeof(window.FileReader) === 'function'){
-					self.Ajax =new XHR2Send(options.files);
-				} else {
-				/*iframe上传*/
-					useIframeInit();
-					iframeSend();
-				}
-			}else {
-				createAjaxRequest();
-				self.Ajax.onreadystatechange = stateHandler;
-				send();
-			}
-		};
-		
-		run();
-	
-	};
-	
-	
-	/*几个常用的tween算法*/
-	var Tween = {
-		Linear: function( t, b, c, d) { return c*t/d + b; },
-		Quad: {
-			easeIn: function(t,b,c,d) {
-				return c*(t/=d)*t + b;
-			},
-			easeOut: function(t,b,c,d) {
-				return -c *(t/=d)*(t-2) + b;
-			},
-			easeInOut: function(t,b,c,d) {
-				if ((t/=d/2) < 1) {return c/2*t*t + b;}
-				return -c/2 * ((--t)*(t-2) - 1) + b;
-			}
-		},
-		Quart: {
-			easeIn: function(t,b,c,d) {
-				return c*(t/=d)*t*t*t + b;
-			},
-			easeOut: function(t,b,c,d) {
-				return -c * ((t = t/d-1)*t*t*t - 1) + b;
-			},
-			easeInOut: function(t,b,c,d) {
-				if ((t/=d/2) < 1) {return c/2*t*t*t*t + b;}
-				return -c/2 * ((t-=2)*t*t*t - 2) + b;
-			}
-		},
-		Back: {
-			easeOut: function(t, b, c, d, s) {
-				if (s === undefined) s = 1.70158;
-				return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
-			}
-		},
-		Bounce: {
-			easeOut: function(t, b, c, d) {
-				if ((t /= d) < (1 / 2.75)) {
-					return c * (7.5625 * t * t) + b;
-				} else if (t < (2 / 2.75)) {
-					return c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
-				} else if (t < (2.5 / 2.75)) {
-					return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
-				} else {
-					return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
-				}
-			}
-		}
-	};
-	
-	/*
-	* 2013.3.27
-	*
-	* eachSlide插件	
-	* 
-	* 第一种思路解决方案:
-	*	将每个要滑动的元素分别生成object,独立的进行slide
-	*	移动超出边界后对位置判断,重新初始化自身位置,是滑动一直进行下去
-	*	此种思路不适合广告位,更适合一个展区多个frame或多个模块的滑动	
-	*
-	* 最近参考了大量滑动的插件，发现这种方式并不适用，理由如下：
-	* 1.每个滑动元素单独生成一个实例，之间的关联性较难达到统一控制。要对整体的移动或效果进行操作，
-	* 程序复杂性方面过高，暂时无法实现
-	* 2.测试了大部分浏览器，在滑动过程中，由于元素单独生成实例，初始化（init）有时间上的先后，
-	* 在slide过程中元素之间会有空隙存在。
-	* 
-	*/
-	
-	Ys.eachSlide = function(options) {
-		
-		if(typeof options != 'object')options = {};
-		
-		/*不知道这个要怎么描述了*/
-		var self = this;
-		
-		/*初始排位*/
-		var defaultIndex;
-		
-		/*延迟容器*/
-		var moveOnceTimeOutID;
-		var runTimeOutID;
-		var runOn = 1;
-		var runtimeControlID;
-		
-		var totalItemNum = options.totalItemNum||5;
-		var viewItemNum = options.viewItemNum||4;
-		var targetPrefix = options.targetPrefix||'slideItem';
-		var startTime = options.startTime||0;//开始时间
-		var startPosition = options.startPosition||0;//初始偏移位置
-		var duration = options.duration||100;//持续时间
-		var step = options.step||1;/*每次tween移动像素*/
-		var stepTime = options.stepTime||1;/*每次tween移动时间*/
-		var tween = options.tween||'Linear';/*tween算子*/
-		var parent =$(options.parentID).element;
-		var delay = options.delay||2000;/*每次移动后延迟时间*/
-		var direction = options.direction||'left';/*支持向左或向右*/
-		
-			
-		/*初始化*/
-		self.init = function(options) {
-			defaultIndex = self.index = options.index||0;/*当前target排位*/
-			self.target =$(targetPrefix+self.index).element;/*初始化时使用index*/
-			self.targetWidth = self.target.offsetWidth;
-			self.variation = options.variation||self.targetWidth;/*目的地相对初始位置移动增量*/
-		};
-		
-		/*单次移动*/
-		var moveOnce = function(position,tempDirection,callback) {
-			/*position为当前target距左边位置*/
-			var startTimeTemp = startTime;
-			var variation = self.variation;
-			var doMove = function() {
-				switch (tempDirection) {
-				case 'left':startTimeTemp -= stepTime;/*向左滑动*/
-					break;
-				case 'right':startTimeTemp += stepTime;/*向右滑动*/
-					break;
-				default:startTimeTemp -= stepTime;
-				}
-				self.target.style.left =(Math.ceil(position)+Math.ceil(Tween.Quart.easeIn(startTimeTemp,startPosition,variation,duration)))+'px';
-				if(Math.abs(startTimeTemp)<duration) {
-					moveOnceTimeOutID = setTimeout(doMove,stepTime);
-				}
-				else {
-					clearTimeout(moveOnceTimeOutID);callback();
-				}
-			};
-			doMove();
-		};
-		
-		
-		/*滑动至下一个*/
-		var next = function(callback) {
-			var position = self.index*self.variation;
-			moveOnce(position,direction,function() {
-				switch (direction) {
-					case 'left':self.index--;/*向左滑动*/
-						break;
-					case 'right':self.index++;/*向右滑动*/
-						break;
-					default:self.index--;
-				}
-				callback();
-			});
-		};
-		
-		/*滑动至上一个*/
-		var previous = function() {
-			var position = self.index*self.variation;
-			moveOnce(position,(direction =='left'?'right':'left'),function() {
-				switch (direction) {
-					case 'left':self.index++;/*向左滑动*/
-						break;
-					case 'right':self.index--;/*向右滑动*/
-						break;
-					default:self.index--;
-				}
-			});
-		};
-		
-		self.toPrevious = function() {
-			self.stop();
-			previous();
-			self.restart();
-		};
-		
-		self.toNext = function() {
-			self.stop();
-			next();
-			self.restart();
-		};
-		/*运行slide*/
-		self.run = function(t) {
-			if(!runOn)return null;
-			var position=null;
-			switch (direction) {
-				case 'left'://向左滑动
-					if(self.index<-(totalItemNum-viewItemNum-1)) {
-						self.index = viewItemNum;
-						t = self.index;
-					}
-					position = t*self.variation;
-					moveOnce(position,direction,function() {
-							runTimeOutID = setTimeout(function() {self.run(--self.index);},delay);
-						}
-					);
-					break;
-				case 'right'://向右滑动
-					if(self.index>=totalItemNum-1) {
-						self.index =-1;
-						t = self.index;
-					}
-					position = t*self.variation;
-					moveOnce(position,direction,function() {
-							runTimeOutID = setTimeout(function() {self.run(++self.index);},delay);
-						}
-					);
-					break;
-			}
-		};
-		
-		
-		/*暂停动画后重新启动*/
-		self.restart = function() {
-			if(runOn)return true;
-			runOn = 1;
-			runtimeControlID = setTimeout(function() {self.run(self.index);},delay);
-		};
-		
-		/*停止运行,不支持moveonce的停止*/
-		self.stop = function() {
-			if(!runOn)return true;
-			runOn = 0;
-			clearTimeout(runTimeOutID);
-			clearTimeout(runtimeControlID);
-		};
-		
-		/*初始化参数并开始slide*/
-		self.init(options);
-		setTimeout(function() {self.run(self.index);},delay);
-		
-	};
-	
-	
-	/*
-	* 2013.4.10
-	*
-	* Slide插件	
-	* 
-	* 第二种思路解决方案:
-	*	将要滑动的模块
-	*	移动超出边界后对位置判断,重新初始化自身位置,是滑动一直进行下去
-	*	此种思路适合广告位，一次展示一个frame
-	* 
-	*   如果浏览器支持css3则使用css3动画效果
-	*/
-	
-	Ys.Slide = function(options) {
-		
-		if(typeof options != 'object')options = {};
+        self.destruct = function() {
+            try{
+                self.iframe.src ='';
+                searchClassf.iframe.parentNode.removeChild(self.iframe);
+                self.iframe = null;
+                Ys.removeListener(self.xhr2.upload,'progress');
+                Ys.removeListener(self.xhr2,'load');
+                Ys.removeListener(self.xhr2,'abort');
+                Ys.removeListener(self.xhr2,'error');
+                self.xhr2 = null;
+            }catch(e){}
+        };
+        
+        var run = function() {
+            if(options.hasFile) {
+                /*html5上传*/
+                if(typeof(window.FileReader) === 'function'){
+                    self.Ajax =new XHR2Send(options.files);
+                } else {
+                /*iframe上传*/
+                    useIframeInit();
+                    iframeSend();
+                }
+            }else {
+                createAjaxRequest();
+                self.Ajax.onreadystatechange = stateHandler;
+                send();
+            }
+        };
+        
+        run();
+    
+    };
+    
+    
+    /*几个常用的tween算法*/
+    var Tween = {
+        Linear: function( t, b, c, d) { return c*t/d + b; },
+        Quad: {
+            easeIn: function(t,b,c,d) {
+                return c*(t/=d)*t + b;
+            },
+            easeOut: function(t,b,c,d) {
+                return -c *(t/=d)*(t-2) + b;
+            },
+            easeInOut: function(t,b,c,d) {
+                if ((t/=d/2) < 1) {return c/2*t*t + b;}
+                return -c/2 * ((--t)*(t-2) - 1) + b;
+            }
+        },
+        Quart: {
+            easeIn: function(t,b,c,d) {
+                return c*(t/=d)*t*t*t + b;
+            },
+            easeOut: function(t,b,c,d) {
+                return -c * ((t = t/d-1)*t*t*t - 1) + b;
+            },
+            easeInOut: function(t,b,c,d) {
+                if ((t/=d/2) < 1) {return c/2*t*t*t*t + b;}
+                return -c/2 * ((t-=2)*t*t*t - 2) + b;
+            }
+        },
+        Back: {
+            easeOut: function(t, b, c, d, s) {
+                if (s === undefined) s = 1.70158;
+                return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+            }
+        },
+        Bounce: {
+            easeOut: function(t, b, c, d) {
+                if ((t /= d) < (1 / 2.75)) {
+                    return c * (7.5625 * t * t) + b;
+                } else if (t < (2 / 2.75)) {
+                    return c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
+                } else if (t < (2.5 / 2.75)) {
+                    return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
+                } else {
+                    return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+                }
+            }
+        }
+    };
+    
+    /*
+    * 2013.3.27
+    *
+    * eachSlide插件    
+    * 
+    * 第一种思路解决方案:
+    *    将每个要滑动的元素分别生成object,独立的进行slide
+    *    移动超出边界后对位置判断,重新初始化自身位置,是滑动一直进行下去
+    *    此种思路不适合广告位,更适合一个展区多个frame或多个模块的滑动    
+    *
+    * 最近参考了大量滑动的插件，发现这种方式并不适用，理由如下：
+    * 1.每个滑动元素单独生成一个实例，之间的关联性较难达到统一控制。要对整体的移动或效果进行操作，
+    * 程序复杂性方面过高，暂时无法实现
+    * 2.测试了大部分浏览器，在滑动过程中，由于元素单独生成实例，初始化（init）有时间上的先后，
+    * 在slide过程中元素之间会有空隙存在。
+    * 
+    */
+    
+    Ys.eachSlide = function(options) {
+        
+        if(typeof options != 'object')options = {};
+        
+        /*不知道这个要怎么描述了*/
+        var self = this;
+        
+        /*初始排位*/
+        var defaultIndex;
+        
+        /*延迟容器*/
+        var moveOnceTimeOutID;
+        var runTimeOutID;
+        var runOn = 1;
+        var runtimeControlID;
+        
+        var totalItemNum = options.totalItemNum||5;
+        var viewItemNum = options.viewItemNum||4;
+        var targetPrefix = options.targetPrefix||'slideItem';
+        var startTime = options.startTime||0;//开始时间
+        var startPosition = options.startPosition||0;//初始偏移位置
+        var duration = options.duration||100;//持续时间
+        var step = options.step||1;/*每次tween移动像素*/
+        var stepTime = options.stepTime||1;/*每次tween移动时间*/
+        var tween = options.tween||'Linear';/*tween算子*/
+        var parent =$(options.parentID).element;
+        var delay = options.delay||2000;/*每次移动后延迟时间*/
+        var direction = options.direction||'left';/*支持向左或向右*/
+        
+            
+        /*初始化*/
+        self.init = function(options) {
+            defaultIndex = self.index = options.index||0;/*当前target排位*/
+            self.target =$(targetPrefix+self.index).element;/*初始化时使用index*/
+            self.targetWidth = self.target.offsetWidth;
+            self.variation = options.variation||self.targetWidth;/*目的地相对初始位置移动增量*/
+        };
+        
+        /*单次移动*/
+        var moveOnce = function(position,tempDirection,callback) {
+            /*position为当前target距左边位置*/
+            var startTimeTemp = startTime;
+            var variation = self.variation;
+            var doMove = function() {
+                switch (tempDirection) {
+                case 'left':startTimeTemp -= stepTime;/*向左滑动*/
+                    break;
+                case 'right':startTimeTemp += stepTime;/*向右滑动*/
+                    break;
+                default:startTimeTemp -= stepTime;
+                }
+                self.target.style.left =(Math.ceil(position)+Math.ceil(Tween.Quart.easeIn(startTimeTemp,startPosition,variation,duration)))+'px';
+                if(Math.abs(startTimeTemp)<duration) {
+                    moveOnceTimeOutID = setTimeout(doMove,stepTime);
+                }
+                else {
+                    clearTimeout(moveOnceTimeOutID);callback();
+                }
+            };
+            doMove();
+        };
+        
+        
+        /*滑动至下一个*/
+        var next = function(callback) {
+            var position = self.index*self.variation;
+            moveOnce(position,direction,function() {
+                switch (direction) {
+                    case 'left':self.index--;/*向左滑动*/
+                        break;
+                    case 'right':self.index++;/*向右滑动*/
+                        break;
+                    default:self.index--;
+                }
+                callback();
+            });
+        };
+        
+        /*滑动至上一个*/
+        var previous = function() {
+            var position = self.index*self.variation;
+            moveOnce(position,(direction =='left'?'right':'left'),function() {
+                switch (direction) {
+                    case 'left':self.index++;/*向左滑动*/
+                        break;
+                    case 'right':self.index--;/*向右滑动*/
+                        break;
+                    default:self.index--;
+                }
+            });
+        };
+        
+        self.toPrevious = function() {
+            self.stop();
+            previous();
+            self.restart();
+        };
+        
+        self.toNext = function() {
+            self.stop();
+            next();
+            self.restart();
+        };
+        /*运行slide*/
+        self.run = function(t) {
+            if(!runOn)return null;
+            var position=null;
+            switch (direction) {
+                case 'left'://向左滑动
+                    if(self.index<-(totalItemNum-viewItemNum-1)) {
+                        self.index = viewItemNum;
+                        t = self.index;
+                    }
+                    position = t*self.variation;
+                    moveOnce(position,direction,function() {
+                            runTimeOutID = setTimeout(function() {self.run(--self.index);},delay);
+                        }
+                    );
+                    break;
+                case 'right'://向右滑动
+                    if(self.index>=totalItemNum-1) {
+                        self.index =-1;
+                        t = self.index;
+                    }
+                    position = t*self.variation;
+                    moveOnce(position,direction,function() {
+                            runTimeOutID = setTimeout(function() {self.run(++self.index);},delay);
+                        }
+                    );
+                    break;
+            }
+        };
+        
+        
+        /*暂停动画后重新启动*/
+        self.restart = function() {
+            if(runOn)return true;
+            runOn = 1;
+            runtimeControlID = setTimeout(function() {self.run(self.index);},delay);
+        };
+        
+        /*停止运行,不支持moveonce的停止*/
+        self.stop = function() {
+            if(!runOn)return true;
+            runOn = 0;
+            clearTimeout(runTimeOutID);
+            clearTimeout(runtimeControlID);
+        };
+        
+        /*初始化参数并开始slide*/
+        self.init(options);
+        setTimeout(function() {self.run(self.index);},delay);
+        
+    };
+    
+    
+    /*
+    * 2013.4.10
+    *
+    * Slide插件    
+    * 
+    * 第二种思路解决方案:
+    *    将要滑动的模块
+    *    移动超出边界后对位置判断,重新初始化自身位置,是滑动一直进行下去
+    *    此种思路适合广告位，一次展示一个frame
+    * 
+    *   如果浏览器支持css3则使用css3动画效果
+    */
+    
+    Ys.Slide = function(options) {
+        
+        if(typeof options != 'object')options = {};
 
-		var self = this;
-		
-		var totalItem = options.totalItem;
-		var itemWidth = options.itemWidth;
-		var prefix = options.prefix||'slideItem';
-		var duration = options.duration||300;
-		var css3Duration=options.css3Duration||options.duration;
-		var step = options.step||1;
-		var stepTime = options.stepTime||1;
-		var delay = options.delay||3000;
-		var sliderID = options.sliderID||'slider';
-		var slidingTimeoutID;
-		var playingTimeoutID;
-		var sliding = 0;
-		var slider;
-		var onShow = 0;
-		var before;
-		
-		var controllerPrefix = options.controllerPrefix;
-		var controllerOnClass = options.controllerOnClass;
+        var self = this;
+        
+        var totalItem = options.totalItem;
+        var itemWidth = options.itemWidth;
+        var prefix = options.prefix||'slideItem';
+        var duration = options.duration||300;
+        var css3Duration=options.css3Duration||options.duration;
+        var step = options.step||1;
+        var stepTime = options.stepTime||1;
+        var delay = options.delay||3000;
+        var sliderID = options.sliderID||'slider';
+        var slidingTimeoutID;
+        var playingTimeoutID;
+        var sliding = 0;
+        var slider;
+        var onShow = 0;
+        var before;
+        
+        var controllerPrefix = options.controllerPrefix;
+        var controllerOnClass = options.controllerOnClass;
 
-		var sliderTranslate;
+        var sliderTranslate;
         var vendorTransform = vendorPrefix + "Transform";
         var vendorDuration = vendorPrefix + "TransitionDuration";
         var vendorTiming = vendorPrefix + "TransitionTimingFunction";
 
-		
-		self.slideBox = [];
-		self.controllerBox = [];
-		
-		self.init = function() {
-			for(var i = 0;i<totalItem;i++) {
-				self.slideBox[i]=$(prefix+i).element;
-				self.slideBox[i].style.zIndex = 9;
-				self.slideBox[i].style.position = 'absolute';
+        
+        self.slideBox = [];
+        self.controllerBox = [];
+        
+        self.init = function() {
+            for(var i = 0;i<totalItem;i++) {
+                self.slideBox[i]=$(prefix+i).element;
+                self.slideBox[i].style.zIndex = 9;
+                self.slideBox[i].style.position = 'absolute';
 
-				self.controllerBox[i] = $(controllerPrefix+i).element;
+                self.controllerBox[i] = $(controllerPrefix+i).element;
 
-				if(i === 0){
-					$(self.slideBox[i]).show();
-					Ys.addClass(self.controllerBox[i],controllerOnClass);
-				}
-				else $(self.slideBox[i]).hide();
-			}
-			slider = $(sliderID).element;
-			slider.style.position ='absolute';
-			if(!itemWidth)itemWidth = slider.offsetWidth;
-		};
-		
-		var build = function(index,onShow,slideDirection) {
-			switch(slideDirection) {
-				case 'left':
-					self.slideBox[index].style.left = itemWidth+'px';
-					sliderTranslate = -itemWidth;
-					break;
-				case 'right':
-					self.slideBox[index].style.left = -itemWidth+'px';
-					sliderTranslate = itemWidth;
-					break;
-				default:
-					if((index-onShow)<0) {
-						self.slideBox[index].style.left = -itemWidth+'px';
-						sliderTranslate = itemWidth;
-					}else {
-						self.slideBox[index].style.left = itemWidth+'px';
-						sliderTranslate = -itemWidth;
-					}
-			}
-			$(self.slideBox[index]).show();
-			self.slideBox[onShow].style.zIndex = 9;
-			self.slideBox[index].style.zIndex = 10;
-		};
-		
-		var doMove = function(index,slideDirection,callback) {
-			if(onShow ==index||sliding)return false;
-			Ys.addClass(self.controllerBox[index],controllerOnClass);
-			Ys.removeClass(self.controllerBox[onShow],controllerOnClass);
-			sliding = 1;
-			build(index,onShow,slideDirection);
-			before = onShow;
-			onShow = index;
-			if(vendorPrefix) {
-				/*浏览器支持css3的情况*/
-				slider.style[vendorTransform]="translateX("+ sliderTranslate +"px)";
-				slider.style[vendorTiming]="ease";
-				slider.style[vendorDuration] = css3Duration+"ms";
-				Ys.addEventListener(slider,vendorTransitionEnd,function end() {
-					$(self.slideBox[before]).hide();
-					self.slideBox[onShow].style.left = 0;
-					slider.style[vendorTransform]="";
-					slider.style[vendorTiming]="";
-					slider.style[vendorDuration]="";
-					slider.removeEventListener(vendorTransitionEnd,end);
-					sliding = 0;
-					if(typeof callback === 'function')callback();
-				});
-			}else {
-				/*浏览器不支持css3的情况*/
-				var startTimeTemp = 0;
-				var tmpDuration = duration/8;
-				var move = function(callbackTmp) {
-					startTimeTemp+=stepTime;
-					slider.style.left = Math.ceil(Tween.Quart.easeIn(startTimeTemp,0,sliderTranslate,tmpDuration))+'px';
-					if(startTimeTemp<=tmpDuration) {
-						slidingTimeoutID = setTimeout(function() {move(callbackTmp);},stepTime);
-					}else {
-						clearTimeout(slidingTimeoutID);
-						$(self.slideBox[before]).hide();
-						self.slideBox[onShow].style.left = 0;
-						slider.style.left = 0;
-						sliding = 0;
-						if(typeof callbackTmp === 'function')callbackTmp();
-					}
-				};
-				if(typeof callback === 'function')move(callback);
-				else move();
-			}
-			return true;
-		};
-		
-		self.prev = function(callback) {
-			self.stop();
-			var index = onShow-1;
-			if(index<0)index = totalItem-1;
-			doMove(index,'right',function() {self.play();});
-		};
-		
-		self.next = function(callback) {
-			self.stop();
-			var index = onShow+1;
-			if(index>=totalItem)index = 0;
-			doMove(index,'left',function() {self.play();});
-		};
-		
-		self.goto = self.show = function(index) {
-			self.stop();
-			if(!doMove(index,'',function() {self.play();}))self.play();
-		};
-		
-		self.play = function() {
-			playingTimeoutID = setTimeout(function() {
-				self.next();
-				},delay);
-		};
-		
-		self.stop = function() {
-			return clearTimeout(playingTimeoutID);
-		};
-		
-		self.init();
-		
-		self.play();
-	};
-	
-	
-	/*
-	* 2013.4.3
-	*
-	* Slide插件	
-	* 
-	* 第三种思路解决方案:
-	*	要移动的模块堆叠在一起,要展示用的z-index和display控制
-	*	效果为淡入淡出替换
-	*	此种思路适合广告位,单一模块展示
-	*
-	* 2013.6.25修改
-	* 加入css3的animation效果，优化支持css3的浏览器显示效果
-	*	
-	*/
-	
-	Ys.fadeSlide = function(options) {
-		
-		if(typeof options != 'object')options = {};
-		
-		var self = this;
-		
-		var fadeinTimeoutID,fadeoutTimeoutID;
-		var playTimeoutID;
-		
-		var totalItem = options.totalItem||5;
-		var prefix = options.prefix||'slideItem';
-		var startOpacity = options.startOpacity||0;
-		var startPosition = options.startPosition||0;/*初始偏移位置*/
-		var duration = options.duration||300;
-		var css3Duration = options.css3Duration||options.duration||300;/*持续时间*/
-		
-		//var duration =(options.css3Duration)*0.1||30;/*持续时间*/
-		var step = options.step||1;
-		var stepTime = options.stepTime||1;
-		var tween = options.tween||'Linear';/*tween算子*/
-		var variation = 100;/*透明目的值*/
-		var delay = options.delay||5000;/*两张切换的延迟*/
-		var sliderID = options.sliderID;/**/
+                if(i === 0){
+                    $(self.slideBox[i]).show();
+                    Ys.addClass(self.controllerBox[i],controllerOnClass);
+                }
+                else $(self.slideBox[i]).hide();
+            }
+            slider = $(sliderID).element;
+            slider.style.position ='absolute';
+            if(!itemWidth)itemWidth = slider.offsetWidth;
+        };
+        
+        var build = function(index,onShow,slideDirection) {
+            switch(slideDirection) {
+                case 'left':
+                    self.slideBox[index].style.left = itemWidth+'px';
+                    sliderTranslate = -itemWidth;
+                    break;
+                case 'right':
+                    self.slideBox[index].style.left = -itemWidth+'px';
+                    sliderTranslate = itemWidth;
+                    break;
+                default:
+                    if((index-onShow)<0) {
+                        self.slideBox[index].style.left = -itemWidth+'px';
+                        sliderTranslate = itemWidth;
+                    }else {
+                        self.slideBox[index].style.left = itemWidth+'px';
+                        sliderTranslate = -itemWidth;
+                    }
+            }
+            $(self.slideBox[index]).show();
+            self.slideBox[onShow].style.zIndex = 9;
+            self.slideBox[index].style.zIndex = 10;
+        };
+        
+        var doMove = function(index,slideDirection,callback) {
+            if(onShow ==index||sliding)return false;
+            Ys.addClass(self.controllerBox[index],controllerOnClass);
+            Ys.removeClass(self.controllerBox[onShow],controllerOnClass);
+            sliding = 1;
+            build(index,onShow,slideDirection);
+            before = onShow;
+            onShow = index;
+            if(vendorPrefix) {
+                /*浏览器支持css3的情况*/
+                slider.style[vendorTransform]="translateX("+ sliderTranslate +"px)";
+                slider.style[vendorTiming]="ease";
+                slider.style[vendorDuration] = css3Duration+"ms";
+                Ys.addEventListener(slider,vendorTransitionEnd,function end() {
+                    $(self.slideBox[before]).hide();
+                    self.slideBox[onShow].style.left = 0;
+                    slider.style[vendorTransform]="";
+                    slider.style[vendorTiming]="";
+                    slider.style[vendorDuration]="";
+                    slider.removeEventListener(vendorTransitionEnd,end);
+                    sliding = 0;
+                    if(typeof callback === 'function')callback();
+                });
+            }else {
+                /*浏览器不支持css3的情况*/
+                var startTimeTemp = 0;
+                var tmpDuration = duration/8;
+                var move = function(callbackTmp) {
+                    startTimeTemp+=stepTime;
+                    slider.style.left = Math.ceil(Tween.Quart.easeIn(startTimeTemp,0,sliderTranslate,tmpDuration))+'px';
+                    if(startTimeTemp<=tmpDuration) {
+                        slidingTimeoutID = setTimeout(function() {move(callbackTmp);},stepTime);
+                    }else {
+                        clearTimeout(slidingTimeoutID);
+                        $(self.slideBox[before]).hide();
+                        self.slideBox[onShow].style.left = 0;
+                        slider.style.left = 0;
+                        sliding = 0;
+                        if(typeof callbackTmp === 'function')callbackTmp();
+                    }
+                };
+                if(typeof callback === 'function')move(callback);
+                else move();
+            }
+            return true;
+        };
+        
+        self.prev = function(callback) {
+            self.stop();
+            var index = onShow-1;
+            if(index<0)index = totalItem-1;
+            doMove(index,'right',function() {self.play();});
+        };
+        
+        self.next = function(callback) {
+            self.stop();
+            var index = onShow+1;
+            if(index>=totalItem)index = 0;
+            doMove(index,'left',function() {self.play();});
+        };
+        
+        self.goto = self.show = function(index) {
+            self.stop();
+            if(!doMove(index,'',function() {self.play();}))self.play();
+        };
+        
+        self.play = function() {
+            playingTimeoutID = setTimeout(function() {
+                self.next();
+                },delay);
+        };
+        
+        self.stop = function() {
+            return clearTimeout(playingTimeoutID);
+        };
+        
+        self.init();
+        
+        self.play();
+    };
+    
+    
+    /*
+    * 2013.4.3
+    *
+    * Slide插件    
+    * 
+    * 第三种思路解决方案:
+    *    要移动的模块堆叠在一起,要展示用的z-index和display控制
+    *    效果为淡入淡出替换
+    *    此种思路适合广告位,单一模块展示
+    *
+    * 2013.6.25修改
+    * 加入css3的animation效果，优化支持css3的浏览器显示效果
+    *    
+    */
+    
+    Ys.fadeSlide = function(options) {
+        
+        if(typeof options != 'object')options = {};
+        
+        var self = this;
+        
+        var fadeinTimeoutID,fadeoutTimeoutID;
+        var playTimeoutID;
+        
+        var totalItem = options.totalItem||5;
+        var prefix = options.prefix||'slideItem';
+        var startOpacity = options.startOpacity||0;
+        var startPosition = options.startPosition||0;/*初始偏移位置*/
+        var duration = options.duration||300;
+        var css3Duration = options.css3Duration||options.duration||300;/*持续时间*/
+        
+        //var duration =(options.css3Duration)*0.1||30;/*持续时间*/
+        var step = options.step||1;
+        var stepTime = options.stepTime||1;
+        var tween = options.tween||'Linear';/*tween算子*/
+        var variation = 100;/*透明目的值*/
+        var delay = options.delay||5000;/*两张切换的延迟*/
+        var sliderID = options.sliderID;/**/
 
-		/*controller*/
-		var controllerPrefix = options.controllerPrefix || null;
-		var controllerOnClass = options.controllerOnClass || null;
-		
-		var fadingInFlag = 0;
-		var fadingOutFlag = 0;
-		
-		var preShown = 0;
-		
-		// var vendorAnimation = vendorPrefix + "AnimationName";
+        /*controller*/
+        var controllerPrefix = options.controllerPrefix || null;
+        var controllerOnClass = options.controllerOnClass || null;
+        
+        var fadingInFlag = 0;
+        var fadingOutFlag = 0;
+        
+        var preShown = 0;
+        
+        // var vendorAnimation = vendorPrefix + "AnimationName";
   //       var vendorDuration = vendorPrefix + "AnimationDuration";
   //       var vendorTiming = vendorPrefix + "AnimationTimingFunction";
-		
-		
-		/*正在演示的index*/
-		self.onShow = 0;
-		
-		/*滑动元素容器*/
-		self.slideBox = [];
-		self.controllerBox = [];
+        
+        
+        /*正在演示的index*/
+        self.onShow = 0;
+        
+        /*滑动元素容器*/
+        self.slideBox = [];
+        self.controllerBox = [];
 
-		self.init = function() {
-			$(sliderID).element.style.position='relative';
-			for(var i = 0;i<totalItem;i++) {
-				self.slideBox[i] = $(prefix+i).element;
-				self.slideBox[i].style.position = 'absolute';
-				self.slideBox[i].style.top = self.slideBox[i].style.left = 0;
+        self.init = function() {
+            $(sliderID).element.style.position='relative';
+            for(var i = 0;i<totalItem;i++) {
+                self.slideBox[i] = $(prefix+i).element;
+                self.slideBox[i].style.position = 'absolute';
+                self.slideBox[i].style.top = self.slideBox[i].style.left = 0;
 
-				if(controllerPrefix !== null) {
-					self.controllerBox[i] = $(controllerPrefix + i).element;
-					$(controllerPrefix + i).bind("click",function(index){
-						return function() {
-							self.goto(index);
-						};
-					}(i));
-				}
-				if(i === 0) {
-					Ys.addClass(self.controllerBox[i],controllerOnClass);
-					$(self.slideBox[i]).show();
-					self.slideBox[i].style.opacity = 1;
-				}
-				else {
-					$(self.slideBox[i]).hide();
-					self.slideBox[i].style.opacity = 0;
-				}
-			}
-		};
-		
-		/*单次淡入淡出*/
-		var doFade = function(index,time,startOpacity,direction,callback) {
-			var opacityValue;
-			var timetemp = time;
-			opacityValue = Math.ceil(Tween.Linear(timetemp,startOpacity,variation,duration));
-			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
-				self.slideBox[index].style.filter ="alpha(opacity ="+opacityValue+")";
-				
-			}else {
-				self.slideBox[index].style.opacity = opacityValue/variation;
-			}
-			if(direction =='in') {
-				timetemp+=step;
-				if(Math.abs(timetemp)<=duration) {
-					// if(Ys._IEVersion !== undefined && Ys._IEVersion<=8 && opacityValue>=100) {
-					// clearTimeout(fadeinTimeoutID);
-					// if(typeof callback =='function')callback();
-					// }else {
-						fadeinTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
-					//}
-				}
-				else {
-					clearTimeout(fadeinTimeoutID);
-					if(typeof callback =='function')callback();
-				}
-			}
-			if(direction =='out') {
-				timetemp-=step;
-				
-				if(Math.abs(timetemp)<=duration) {
-					// if(Ys._isIE&&opacityValue>=100) {
-					// clearTimeout(fadeoutTimeoutID);
-					// if(typeof callback =='function')callback();
-					// }else {
-						fadeoutTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
-					// }
-				}
-				else {
-					clearTimeout(fadeoutTimeoutID);
-					if(typeof callback =='function')callback();
-				}
-			}
-			
-		};
-		
-		/*单次淡出效果*/
-		self.fadeOut = function(index,callback) {
-			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
-				self.slideBox[index].style.filter ="Alpha(opacity = 100)";
-			} else {
-				self.slideBox[index].style.opacity = 1;
-			}
-			$(self.slideBox[index]).show();
-			doFade(index,0,variation,'out',function() {
-				if(typeof callback =='function')callback();
-			});
-		};
-		
-		/*单次淡入效果*/
-		self.fadeIn = function(index,callback) {
-			if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
-				self.slideBox[index].style.filter ="alpha(opacity = 0)";
-			} else {
-				self.slideBox[index].style.opacity = 0;
-			}
-			$(self.slideBox[index]).show();
-			
-			doFade(index,0,0,'in',function() {
-				if(typeof callback =='function')callback();
-			});
-		};
-		
-		/*呈现标识符为index的元素*/
-		self.show = function(index,callback) {
-			if(self.onShow == index || fadingInFlag == 1 || fadingOutFlag==1)return false;
-			fadingInFlag = 1;
-			fadingOutFlag = 1;
-			preShown = self.onShow;
-			self.onShow = index;
-			/*controller切换*/
-			Ys.addClass(self.controllerBox[index],controllerOnClass);
-			Ys.removeClass(self.controllerBox[preShown],controllerOnClass);
-			/*if(vendorPrefix) {
-			浏览器支持css3时渐变*/
-				/*使用关键帧$(self.slideBox[index]).show();
-				self.slideBox[index].style[vendorAnimation]="fadeIn";
-				self.slideBox[preShown].style[vendorAnimation]="fadeOut";
-				self.slideBox[index].style[vendorTiming] = self.slideBox[preShown].style[vendorTiming]="ease-out";
-				self.slideBox[index].style[vendorDuration] = self.slideBox[preShown].style[vendorDuration] = css3Duration+"ms";
-				self.slideBox[preShown].style.zIndex = 9;
-				self.slideBox[index].style.zIndex = 10;
-				Ys.addEventListener(self.slideBox[index],vendorAnimationEnd,function end() {
-					self.slideBox[index].style.opacity = 1;
-					self.slideBox[preShown].style.opacity = 0;
-					$(self.slideBox[preShown]).hide();
-					self.slideBox[index].style[vendorAnimation] = self.slideBox[preShown].style[vendorAnimation]="";
-					self.slideBox[index].style[vendorTiming] = self.slideBox[preShown].style[vendorTiming]="";
-					self.slideBox[index].style[vendorDuration] = self.slideBox[preShown].style[vendorDuration]="";
-					self.slideBox[index].removeEventListener(vendorTransitionEnd,end);
-					fadingInFlag = 0;
-					if(typeof callback === 'function')callback();
-				});
-				
-			} else {*/
-				/*浏览器不支持css3时的渐变*/
-				self.slideBox[preShown].style.zIndex = 9;
-				self.slideBox[index].style.zIndex = 10;
-				self.fadeIn(index,function() {
-					$(self.slideBox[preShown]).hide();
-					fadingInFlag = 0;
-					if(typeof callback =='function')callback();
-				});
+                if(controllerPrefix !== null) {
+                    self.controllerBox[i] = $(controllerPrefix + i).element;
+                    $(controllerPrefix + i).bind("click",function(index){
+                        return function() {
+                            self.goto(index);
+                        };
+                    }(i));
+                    /*$(controllerPrefix + i).bind("click",function(){
+                        console.log(this);
+                        
+                    });*/
+                }
+                if(i === 0) {
+                    Ys.addClass(self.controllerBox[i],controllerOnClass);
+                    $(self.slideBox[i]).show();
+                    self.slideBox[i].style.opacity = 1;
+                }
+                else {
+                    $(self.slideBox[i]).hide();
+                    self.slideBox[i].style.opacity = 0;
+                }
+            }
+        };
+        
+        /*单次淡入淡出*/
+        var doFade = function(index,time,startOpacity,direction,callback) {
+            var opacityValue;
+            var timetemp = time;
+            opacityValue = Math.ceil(Tween.Linear(timetemp,startOpacity,variation,duration));
+            if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
+                self.slideBox[index].style.filter ="alpha(opacity ="+opacityValue+")";
+                
+            }else {
+                self.slideBox[index].style.opacity = opacityValue/variation;
+            }
+            if(direction =='in') {
+                timetemp+=step;
+                if(Math.abs(timetemp)<=duration) {
+                    // if(Ys._IEVersion !== undefined && Ys._IEVersion<=8 && opacityValue>=100) {
+                    // clearTimeout(fadeinTimeoutID);
+                    // if(typeof callback =='function')callback();
+                    // }else {
+                        fadeinTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
+                    //}
+                }
+                else {
+                    clearTimeout(fadeinTimeoutID);
+                    if(typeof callback =='function')callback();
+                }
+            }
+            if(direction =='out') {
+                timetemp-=step;
+                
+                if(Math.abs(timetemp)<=duration) {
+                    // if(Ys._isIE&&opacityValue>=100) {
+                    // clearTimeout(fadeoutTimeoutID);
+                    // if(typeof callback =='function')callback();
+                    // }else {
+                        fadeoutTimeoutID = setTimeout(function() {doFade(index,timetemp,startOpacity,direction,callback);},stepTime);
+                    // }
+                }
+                else {
+                    clearTimeout(fadeoutTimeoutID);
+                    if(typeof callback =='function')callback();
+                }
+            }
+            
+        };
+        
+        /*单次淡出效果*/
+        self.fadeOut = function(index,callback) {
+            if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
+                self.slideBox[index].style.filter ="Alpha(opacity = 100)";
+            } else {
+                self.slideBox[index].style.opacity = 1;
+            }
+            $(self.slideBox[index]).show();
+            doFade(index,0,variation,'out',function() {
+                if(typeof callback =='function')callback();
+            });
+        };
+        
+        /*单次淡入效果*/
+        self.fadeIn = function(index,callback) {
+            if(Ys._IEVersion !== undefined && Ys._IEVersion<=8) {
+                self.slideBox[index].style.filter ="alpha(opacity = 0)";
+            } else {
+                self.slideBox[index].style.opacity = 0;
+            }
+            $(self.slideBox[index]).show();
+            
+            doFade(index,0,0,'in',function() {
+                if(typeof callback =='function')callback();
+            });
+        };
+        
+        /*呈现标识符为index的元素*/
+        self.show = function(index,callback) {
+            if(self.onShow == index || fadingInFlag == 1 || fadingOutFlag==1)return false;
+            fadingInFlag = 1;
+            fadingOutFlag = 1;
+            preShown = self.onShow;
+            self.onShow = index;
+            /*controller切换*/
+            Ys.addClass(self.controllerBox[index],controllerOnClass);
+            Ys.removeClass(self.controllerBox[preShown],controllerOnClass);
+            /*if(vendorPrefix) {
+            浏览器支持css3时渐变*/
+                /*使用关键帧$(self.slideBox[index]).show();
+                self.slideBox[index].style[vendorAnimation]="fadeIn";
+                self.slideBox[preShown].style[vendorAnimation]="fadeOut";
+                self.slideBox[index].style[vendorTiming] = self.slideBox[preShown].style[vendorTiming]="ease-out";
+                self.slideBox[index].style[vendorDuration] = self.slideBox[preShown].style[vendorDuration] = css3Duration+"ms";
+                self.slideBox[preShown].style.zIndex = 9;
+                self.slideBox[index].style.zIndex = 10;
+                Ys.addEventListener(self.slideBox[index],vendorAnimationEnd,function end() {
+                    self.slideBox[index].style.opacity = 1;
+                    self.slideBox[preShown].style.opacity = 0;
+                    $(self.slideBox[preShown]).hide();
+                    self.slideBox[index].style[vendorAnimation] = self.slideBox[preShown].style[vendorAnimation]="";
+                    self.slideBox[index].style[vendorTiming] = self.slideBox[preShown].style[vendorTiming]="";
+                    self.slideBox[index].style[vendorDuration] = self.slideBox[preShown].style[vendorDuration]="";
+                    self.slideBox[index].removeEventListener(vendorTransitionEnd,end);
+                    fadingInFlag = 0;
+                    if(typeof callback === 'function')callback();
+                });
+                
+            } else {*/
+                /*浏览器不支持css3时的渐变*/
+                self.slideBox[preShown].style.zIndex = 9;
+                self.slideBox[index].style.zIndex = 10;
+                self.fadeIn(index,function() {
+                    $(self.slideBox[preShown]).hide();
+                    fadingInFlag = 0;
+                    if(typeof callback =='function')callback();
+                });
 
-				self.fadeOut(preShown,function() {
-					$(self.slideBox[preShown]).hide();
-					fadingOutFlag = 0;
-					if(typeof callback =='function')callback();
-				});
-			/*}*/
-		};
-		
-		self.previous = function(callback) {
-			self.stop();
-			if(self.onShow === 0)self.show(totalItem-1,function() {
-				if(typeof callback == 'function')callback();
-				else self.play();
-				});
-			else self.show(self.onShow-1,function() {
-				if(typeof callback == 'function')callback();
-				else self.play();
-				});
-		};
-		
-		self.next = function(callback) {
-			self.stop();
-			if(self.onShow ==(totalItem-1))self.show(0,function() {
-				if(typeof callback == 'function')callback();
-				else self.play();
-				});
-			else self.show(self.onShow+1,function() {
-				if(typeof callback == 'function')callback();
-				else self.play();
-				});
-		};
+                self.fadeOut(preShown,function() {
+                    $(self.slideBox[preShown]).hide();
+                    fadingOutFlag = 0;
+                    if(typeof callback =='function')callback();
+                });
+            /*}*/
+        };
+        
+        self.previous = function(callback) {
+            self.stop();
+            if(self.onShow === 0)self.show(totalItem-1,function() {
+                if(typeof callback == 'function')callback();
+                else self.play();
+                });
+            else self.show(self.onShow-1,function() {
+                if(typeof callback == 'function')callback();
+                else self.play();
+                });
+        };
+        
+        self.next = function(callback) {
+            self.stop();
+            if(self.onShow ==(totalItem-1))self.show(0,function() {
+                if(typeof callback == 'function')callback();
+                else self.play();
+                });
+            else self.show(self.onShow+1,function() {
+                if(typeof callback == 'function')callback();
+                else self.play();
+                });
+        };
 
-		self.goto = function(index) {
-			self.stop();
-			self.show(index,self.play());
-		};
-		
-		/*循环播放*/
-		self.play = function() {
-			if(playTimeoutID)clearTimeout(playTimeoutID);
-			playTimeoutID = setTimeout(function() {
-				self.next(function() { self.play();});
-			},delay);
-		};
-		
-		self.stop = function() {
-			if(playTimeoutID)clearTimeout(playTimeoutID);
-		};
-		
-		self.init();
-		
-		playTimeoutID = setTimeout(function() {
-				self.next(function() { self.play();});
-			},delay);
-	};
-	
-	/*表单验证组件*/
-	Ys.formValidator = function(options) {
-		
-		if(typeof options != 'object')options = {};
-		
-		var self = this;
-		
-		self.regexEnum = {
-			
-			captcha:"^\\w{4}$",								//四字母
-			password:"^.{6,40}$",
-			intege:"^-?[1-9]\\d*$",					//整数
-			intege1:"^[1-9]\\d*$",					//正整数
-			intege2:"^-[1-9]\\d*$",					//负整数
-			num:"^([+-]?)\\d*\\.?\\d+$",			//数字
-			num1:"^[1-9]\\d*|0$",					//正数（正整数 + 0）
-			num2:"^-[1-9]\\d*|0$",					//负数（负整数 + 0）
-			decmal:"^([+-]?)\\d*\\.\\d+$",			//浮点数
-			decmal1:"^[1-9]\\d*.\\d*|0.\\d*[1-9]\\d*$",　　	//正浮点数
-			decmal2:"^-([1-9]\\d*.\\d*|0.\\d*[1-9]\\d*)$",　 //负浮点数
-			decmal3:"^-?([1-9]\\d*.\\d*|0.\\d*[1-9]\\d*|0?.0+|0)$",　 //浮点数
-			decmal4:"^[1-9]\\d*.\\d*|0.\\d*[1-9]\\d*|0?.0+|0$",　　 //非负浮点数（正浮点数 + 0）
-			decmal5:"^(-([1-9]\\d*.\\d*|0.\\d*[1-9]\\d*))|0?.0+|0$",　　//非正浮点数（负浮点数 + 0）
+        self.goto = function(index) {
+            self.stop();
+            self.show(index,self.play());
+        };
+        
+        /*循环播放*/
+        self.play = function() {
+            if(playTimeoutID)clearTimeout(playTimeoutID);
+            playTimeoutID = setTimeout(function() {
+                self.next(function() { self.play();});
+            },delay);
+        };
+        
+        self.stop = function() {
+            if(playTimeoutID)clearTimeout(playTimeoutID);
+        };
+        
+        self.init();
+        
+        playTimeoutID = setTimeout(function() {
+                self.next(function() { self.play();});
+            },delay);
+    };
+    
+    /*表单验证组件*/
+    Ys.formValidator = function(options) {
+        
+        if(typeof options != 'object')options = {};
+        
+        var self = this;
+        
+        self.regexEnum = {
+            
+            captcha:"^\\w{4}$",                                //四字母
+            password:"^.{6,40}$",
+            intege:"^-?[1-9]\\d*$",                    //整数
+            intege1:"^[1-9]\\d*$",                    //正整数
+            intege2:"^-[1-9]\\d*$",                    //负整数
+            num:"^([+-]?)\\d*\\.?\\d+$",            //数字
+            num1:"^[1-9]\\d*|0$",                    //正数（正整数 + 0）
+            num2:"^-[1-9]\\d*|0$",                    //负数（负整数 + 0）
+            decmal:"^([+-]?)\\d*\\.\\d+$",            //浮点数
+            decmal1:"^[1-9]\\d*.\\d*|0.\\d*[1-9]\\d*$",　　    //正浮点数
+            decmal2:"^-([1-9]\\d*.\\d*|0.\\d*[1-9]\\d*)$",　 //负浮点数
+            decmal3:"^-?([1-9]\\d*.\\d*|0.\\d*[1-9]\\d*|0?.0+|0)$",　 //浮点数
+            decmal4:"^[1-9]\\d*.\\d*|0.\\d*[1-9]\\d*|0?.0+|0$",　　 //非负浮点数（正浮点数 + 0）
+            decmal5:"^(-([1-9]\\d*.\\d*|0.\\d*[1-9]\\d*))|0?.0+|0$",　　//非正浮点数（负浮点数 + 0）
 
-			email:"^\\w+((-\\w+)|(\\.\\w+))*\\@[A-Za-z0-9]+((\\.|-)[A-Za-z0-9]+)*\\.[A-Za-z0-9]+$", //邮件
-			color:"^[a-fA-F0-9]{6}$",				//颜色
-			url:"^http[s]?:\\/\\/([\\w-]+\\.)+[\\w-]+([\\w-./?%&=]*)?$",	//url
-			chinese:"^[\\u4E00-\\u9FA5\\uF900-\\uFA2D]+$",					//仅中文
-			ascii:"^[\\x00-\\xFF]+$",				//仅ACSII字符
-			zipcode:"^\\d{6}$",						//邮编
-			mobile:"^(13|15)[0-9]{9}$",				//手机
-			ip4:"^(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)$",	//ip地址
-			notempty:"^\\S+$",						//非空
-			picture:"(.*)\\.(jpg|bmp|gif|ico|pcx|jpeg|tif|png|raw|tga)$",	//图片
-			rar:"(.*)\\.(rar|zip|7zip|tgz)$",								//压缩文件
-			qq:"^[1-9]*[1-9][0-9]*$",				//QQ号码
-			tel:"^(([0\\+]\\d{2,3}-)?(0\\d{2,3})-)?(\\d{7,8})(-(\\d{3,}))?$",	//电话号码的函数(包括验证国内区号,国际区号,分机号)
-			username:"^\\w+$",						//用来用户注册。匹配由数字、26个英文字母或者下划线组成的字符串
-			letter:"^[A-Za-z]+$",					//字母
-			letter_u:"^[A-Z]+$",					//大写字母
-			letter_l:"^[a-z]+$",					//小写字母
-			idcard:"^[1-9]([0-9]{14}|[0-9]{17})$"	//身份证
-		};
-		
-		options = {
-			formId:options.formId||'form',
-			asyncPost:options.asyncPost||'true',
-			toVerifyItems:options.toVerifyItems,
-			itemsWrap:options.itemsWrap||'',
-			infoWrapIDs:options.infoWrapIDs||'',
-			verifyType:options.verifyType,
-			errorInfo:options.errorInfo||'',
-			itemWrongFn:options.itemWrongFn||function(){},
-			itemRightFn:options.itemRightFn||function(){},
-			submit:options.submit||function(form){form.submit();}
-		};
-		
-		self.form =$(options.formId).element;
-		self.toVerifyItems = [];
-		self.itemsWrap = [];
-		self.infoWrap = [];
-		self.validValue = [];
+            email:"^\\w+((-\\w+)|(\\.\\w+))*\\@[A-Za-z0-9]+((\\.|-)[A-Za-z0-9]+)*\\.[A-Za-z0-9]+$", //邮件
+            color:"^[a-fA-F0-9]{6}$",                //颜色
+            url:"^http[s]?:\\/\\/([\\w-]+\\.)+[\\w-]+([\\w-./?%&=]*)?$",    //url
+            chinese:"^[\\u4E00-\\u9FA5\\uF900-\\uFA2D]+$",                    //仅中文
+            ascii:"^[\\x00-\\xFF]+$",                //仅ACSII字符
+            zipcode:"^\\d{6}$",                        //邮编
+            mobile:"^(13|15)[0-9]{9}$",                //手机
+            ip4:"^(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)\\.(25[0-5]|2[0-4]\\d|[0-1]\\d{2}|[1-9]?\\d)$",    //ip地址
+            notempty:"^\\S+$",                        //非空
+            picture:"(.*)\\.(jpg|bmp|gif|ico|pcx|jpeg|tif|png|raw|tga)$",    //图片
+            rar:"(.*)\\.(rar|zip|7zip|tgz)$",                                //压缩文件
+            qq:"^[1-9]*[1-9][0-9]*$",                //QQ号码
+            tel:"^(([0\\+]\\d{2,3}-)?(0\\d{2,3})-)?(\\d{7,8})(-(\\d{3,}))?$",    //电话号码的函数(包括验证国内区号,国际区号,分机号)
+            username:"^\\w+$",                        //用来用户注册。匹配由数字、26个英文字母或者下划线组成的字符串
+            letter:"^[A-Za-z]+$",                    //字母
+            letter_u:"^[A-Z]+$",                    //大写字母
+            letter_l:"^[a-z]+$",                    //小写字母
+            idcard:"^[1-9]([0-9]{14}|[0-9]{17})$"    //身份证
+        };
+        
+        options = {
+            formId:options.formId||'form',
+            asyncPost:options.asyncPost||'true',
+            toVerifyItems:options.toVerifyItems,
+            itemsWrap:options.itemsWrap||'',
+            infoWrapIDs:options.infoWrapIDs||'',
+            verifyType:options.verifyType,
+            errorInfo:options.errorInfo||'',
+            itemWrongFn:options.itemWrongFn||function(){},
+            itemRightFn:options.itemRightFn||function(){},
+            submit:options.submit||function(form){form.submit();},
+            callbacks:options.callbacks
+        };
+        
 
-		function matchStr(regexEnum,str,rgExp) {
-			if(!regexEnum[rgExp])return false;
-			if(str.match(regexEnum[rgExp]) === null)return false;
-			return true;
-		}
-		
-		function checkOnce(index) {
-			if(self.toVerifyItems[index].value !== '')Ys.addClass(self.itemsWrap[index],'notempty');
-			else Ys.removeClass(self.itemsWrap[index],'notempty');
-			if(!matchStr(self.regexEnum,self.toVerifyItems[index].value,options.verifyType[index])) {
-				Ys.removeClass(self.itemsWrap[index],'right');
-				Ys.addClass(self.itemsWrap[index],'wrong');
-				Ys.addClass(self.infoWrap[index],'active');
-				self.infoWrap[index].innerHTML = options.errorInfo[index];
-				self.validValue[index] = false;
-				options.itemWrongFn(index,self.toVerifyItems[index],self.infoWrap[index]);
-				return false;
-			}else {
-				Ys.removeClass(self.itemsWrap[index],'wrong');
-				Ys.addClass(self.itemsWrap[index],'right');
-				self.infoWrap[index].innerHTML = '';
-				Ys.removeClass(self.infoWrap[index],'active');
-				self.validValue[index] = true;
-				options.itemRightFn(index,self.toVerifyItems[index],self.infoWrap[index]);
-				return true;
-			}
-		}
-		
-		
-		
-		self.init = function() {
-			
-			for(var j = 0;j<options.toVerifyItems.length;j++) {
-				self.toVerifyItems[j] = $(options.toVerifyItems[j]).element;
-				if(!matchStr(self.regexEnum,self.toVerifyItems[j].value,options.verifyType[j])) {
-					self.validValue[j] = false;
-				}else {
-					self.validValue[j] = true;
-				}
-				if(typeof(options.itemsWrap[j])=='undefined') {
-					self.itemsWrap[j] = self.toVerifyItems[j].parentNode;
-				}
-				if(typeof(options.infoWrapIDs[j])!='undefined') {
-					self.infoWrap[j] = $(options.infoWrapIDs[j]).element;
-				}
 
-				Ys.addEventListener(self.toVerifyItems[j],'focus',function(j) {
-					return function(){
-						Ys.addClass(self.itemsWrap[j],'focus');
-						Ys.addClass(self.toVerifyItems[j],'focus');
-					};
-				}(j));
+        self.form =$(options.formId).element;
+        self.toVerifyItems = [];
+        self.itemsWrap = [];
+        self.infoWrap = [];
+        self.validValue = [];
+        self.callbacks = options.callbacks;
 
-				Ys.addEventListener(self.toVerifyItems[j],'blur',function(j) {
-					return function(){
-						Ys.removeClass(self.itemsWrap[j],'focus');
-						Ys.removeClass(self.toVerifyItems[j],'focus');
-						checkOnce(j);
-					};
-				}(j));
-			}
-			
-			
-			Ys.addEventListener(self.form,'submit',function(e) {
-				Ys.stopDefault(e);
-				var ok = true;
-				for(var i = 0;i<options.toVerifyItems.length;i++) {
-					if(self.validValue[i] === false) {
-						if(!checkOnce(i)){
-							ok = false;
-						}
-					}
-				}
-				if(ok === true){
-					options.submit(self.form);
-				} else {
-					return false;
-				}
-			});
-		};
-		
-		self.init();
-		
-	};
-	
-	
-	
-	/*
-	 *
-	 *
-	 *	拖拽组件
-	 *  粗糙实现
-	 *
-	 *	
-	*/
-	Ys.Drag = {
-		obj: null,
-		init: function (options) {
-			options.handler.onmousedown = this.start;
-			options.handler.root = options.root || options.handler;
-			var root = options.handler.root;
-			root.onDragStart = options.dragStart || new Function();
-			root.onDrag = options.onDrag || new Function();
-			root.onDragEnd = options.onDragEnd || new Function();
-		},
-		start: function (e) {
-			/*此时的this是handler */
-			var obj = Drag.obj = this;
-			obj.style.cursor = 'move';
-			e = e || Drag.fixEvent(window.event);
-			ex = e.pageX;
-			ey = e.pageY;
-			obj.lastMouseX = ex;
-			obj.lastMouseY = ey;
-			var x = obj.root.offsetLeft;
-			var y = obj.root.offsetTop;
-			obj.root.style.left = x + "px";
-			obj.root.style.top = y + "px";
-			document.onmouseup = Drag.end;
-			document.onmousemove = Drag.drag;
-			obj.root.onDragStart(x, y);
-		},
-		drag: function (e) {
-			e = e || Drag.fixEvent(window.event);
-			ex = e.pageX;
-			ey = e.pageY;
-			var root = Drag.obj.root;
-			var x = root.style.left ? parseInt(root.style.left) : 0;
-			var y = root.style.top ? parseInt(root.style.top) : 0;
-			var nx = ex - Drag.obj.lastMouseX + x;
-			var ny = ey - Drag.obj.lastMouseY + y;
-			root.style.left = nx + "px";
-			root.style.top = ny + "px";
-			Drag.obj.root.onDrag(nx, ny);
-			Drag.obj.lastMouseX = ex;
-			Drag.obj.lastMouseY = ey;
-		},
-		end: function (e) {
-			var x = Drag.obj.root.style.left ? parseInt(Drag.obj.root.style.left) : 0;
-			var y = Drag.obj.root.style.top ? parseInt(Drag.obj.root.style.top) : 0;
-			Drag.obj.root.onDragEnd(x, y);
-			document.onmousemove = null;
-			document.onmouseup = null;
-			Drag.obj = null;
-		},
-		fixEvent: function (e) {
-			e.pageX = e.clientX + document.documentElement.scrollLeft;
-			e.pageY = e.clientY + document.documentElement.scrollTop;
-			return e;
-		}
-	};
-	
-	Ys.showOverlay = function() {
-		var overlay = document.createElement('div');
-		overlay.id = 'overlay';
-		document.body.insertBefore(overlay,document.body.firstChild);
-	};
-	
-	Ys.collect = function(prefix,url) {
-		
-		var params = [];
-	
-		params[0]= document.URL || '';
-		var args ='p ='+prefix;
-	
-		var c = new Ys.ajax( {
-			url:url+args,
-			type:'GET'
-		});
-	};
+        function matchStr(regexEnum,str,rgExp) {
+            if(!regexEnum[rgExp])return false;
+            if(str.match(regexEnum[rgExp]) === null)return false;
+            return true;
+        }
+        
+        function checkOnce(index) {
+            if(self.toVerifyItems[index].value !== '')Ys.addClass(self.itemsWrap[index],'notempty');
+            else Ys.removeClass(self.itemsWrap[index],'notempty');
 
-	Ys.loadJs = function(url) {
-		var i;
-		var ss = document.getElementsByTagName("script");
-		for (i = 0; i < ss.length; i++) {
-			if (ss[i].src && ss[i].src.indexOf(url) != -1) {
-				return;
-			}
-		}
-		var s = document.createElement("script");
-		s.type = "text/javascript";
-		s.src = url;
-		var head = document.getElementsByTagName("head")[0];
-		head.appendChild(s);
-	};
-	
-	window.Ys = Ys;
-	
+            if(!matchStr(self.regexEnum,self.toVerifyItems[index].value,options.verifyType[index])) {
+                Ys.removeClass(self.itemsWrap[index],'right');
+                Ys.addClass(self.itemsWrap[index],'wrong');
+                Ys.addClass(self.infoWrap[index],'active');
+                self.infoWrap[index].innerHTML = options.errorInfo[index];
+                self.validValue[index] = false;
+                options.itemWrongFn(index,self.toVerifyItems[index],self.infoWrap[index]);
+                return false;
+            }else {
+                Ys.removeClass(self.itemsWrap[index],'wrong');
+                Ys.addClass(self.itemsWrap[index],'right');
+                self.infoWrap[index].innerHTML = '';
+                Ys.removeClass(self.infoWrap[index],'active');
+                self.validValue[index] = true;
+                options.itemRightFn(index,self.toVerifyItems[index],self.infoWrap[index]);
+                self.callbacks[index]();
+                return true;
+            }
+        }
+        
+        
+        
+        self.init = function() {
+            
+            for(var j = 0;j<options.toVerifyItems.length;j++) {
+                self.toVerifyItems[j] = $(options.toVerifyItems[j]).element;
+                if(!matchStr(self.regexEnum,self.toVerifyItems[j].value,options.verifyType[j])) {
+                    self.validValue[j] = false;
+                }else {
+                    self.validValue[j] = true;
+                }
+                if(typeof(options.itemsWrap[j])=='undefined') {
+                    self.itemsWrap[j] = self.toVerifyItems[j].parentNode;
+                }
+                if(typeof(options.infoWrapIDs[j])!='undefined') {
+                    self.infoWrap[j] = $(options.infoWrapIDs[j]).element;
+                }
+
+                Ys.addEventListener(self.toVerifyItems[j],'focus',function(j) {
+                    return function(){
+                        Ys.addClass(self.itemsWrap[j],'focus');
+                        Ys.addClass(self.toVerifyItems[j],'focus');
+                    };
+                }(j));
+
+                Ys.addEventListener(self.toVerifyItems[j],'blur',function(j) {
+                    return function(){
+                        Ys.removeClass(self.itemsWrap[j],'focus');
+                        Ys.removeClass(self.toVerifyItems[j],'focus');
+                        checkOnce(j);
+                    };
+                }(j));
+            }
+            
+            
+            Ys.addEventListener(self.form,'submit',function(e) {
+                Ys.stopDefault(e);
+                var ok = true;
+                for(var i = 0;i<options.toVerifyItems.length;i++) {
+                    if(self.validValue[i] === false) {
+                        if(!checkOnce(i)){
+                            ok = false;
+                        }
+                    }
+                }
+                if(ok === true){
+                    options.submit(self.form);
+                } else {
+                    return false;
+                }
+            });
+        };
+        
+        self.init();
+        
+    };
+    
+    
+    
+    /*
+     *
+     *
+     *    拖拽组件
+     *  粗糙实现
+     *
+     *    
+    */
+    Ys.Drag = {
+        obj: null,
+        init: function (options) {
+            options.handler.onmousedown = this.start;
+            options.handler.root = options.root || options.handler;
+            var root = options.handler.root;
+            root.onDragStart = options.dragStart || new Function();
+            root.onDrag = options.onDrag || new Function();
+            root.onDragEnd = options.onDragEnd || new Function();
+        },
+        start: function (e) {
+            /*此时的this是handler */
+            var obj = Drag.obj = this;
+            obj.style.cursor = 'move';
+            e = e || Drag.fixEvent(window.event);
+            ex = e.pageX;
+            ey = e.pageY;
+            obj.lastMouseX = ex;
+            obj.lastMouseY = ey;
+            var x = obj.root.offsetLeft;
+            var y = obj.root.offsetTop;
+            obj.root.style.left = x + "px";
+            obj.root.style.top = y + "px";
+            document.onmouseup = Drag.end;
+            document.onmousemove = Drag.drag;
+            obj.root.onDragStart(x, y);
+        },
+        drag: function (e) {
+            e = e || Drag.fixEvent(window.event);
+            ex = e.pageX;
+            ey = e.pageY;
+            var root = Drag.obj.root;
+            var x = root.style.left ? parseInt(root.style.left) : 0;
+            var y = root.style.top ? parseInt(root.style.top) : 0;
+            var nx = ex - Drag.obj.lastMouseX + x;
+            var ny = ey - Drag.obj.lastMouseY + y;
+            root.style.left = nx + "px";
+            root.style.top = ny + "px";
+            Drag.obj.root.onDrag(nx, ny);
+            Drag.obj.lastMouseX = ex;
+            Drag.obj.lastMouseY = ey;
+        },
+        end: function (e) {
+            var x = Drag.obj.root.style.left ? parseInt(Drag.obj.root.style.left) : 0;
+            var y = Drag.obj.root.style.top ? parseInt(Drag.obj.root.style.top) : 0;
+            Drag.obj.root.onDragEnd(x, y);
+            document.onmousemove = null;
+            document.onmouseup = null;
+            Drag.obj = null;
+        },
+        fixEvent: function (e) {
+            e.pageX = e.clientX + document.documentElement.scrollLeft;
+            e.pageY = e.clientY + document.documentElement.scrollTop;
+            return e;
+        }
+    };
+    
+    Ys.showOverlay = function() {
+        var overlay = document.createElement('div');
+        overlay.id = 'overlay';
+        document.body.insertBefore(overlay,document.body.firstChild);
+    };
+    
+    Ys.collect = function(prefix,url) {
+        
+        var params = [];
+    
+        params[0]= document.URL || '';
+        var args ='p ='+prefix;
+    
+        var c = new Ys.ajax( {
+            url:url+args,
+            type:'GET'
+        });
+    };
+
+    Ys.loadJs = function(url) {
+        var i;
+        var ss = document.getElementsByTagName("script");
+        for (i = 0; i < ss.length; i++) {
+            if (ss[i].src && ss[i].src.indexOf(url) != -1) {
+                return;
+            }
+        }
+        var s = document.createElement("script");
+        s.type = "text/javascript";
+        s.src = url;
+        var head = document.getElementsByTagName("head")[0];
+        head.appendChild(s);
+    };
+    
+    window.Ys = Ys;
+    
 })(window);
-
+    
