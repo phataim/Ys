@@ -2,22 +2,22 @@
     
     "use strict";
     
-    var Ys = {};
+    //var Ys = {};
 
     /*快速选择器*/
-    var $=function(selector,context) {
+    var Ys = function(selector,context) {
         //return document.getElementById(id);
-        return new F(selector,context);
+        return new Ys.prototype.init(selector,context);
     };
 
-    /*类jquery实现*/
+    /*类jquery实现
     var F = function(selector,context) {
         //console.log(Ys.find);
         return this.init(selector,context);
         //return this.getElementById(selector);
     };
-
-    F.prototype.init =function (selector,context) {
+*/
+    Ys.prototype.init =function (selector,context) {
         var results;
         if(typeof(selector) === "object") {
             this.element = selector;
@@ -29,12 +29,11 @@
             for (var i = 0; i < this.length; i++) {
                 this[i] = results[i];
             }
-            
         }
         return this;
     };
 
-    F.prototype.getElementById = function(id) {
+    Ys.prototype.getElementById = function(id) {
         if(typeof(id) === "object") {
             this.element = id;
         } else {
@@ -43,27 +42,27 @@
         return this;
     };
 
-    F.prototype.bind =function(type,fn) {
+    Ys.prototype.bind =function(type,fn) {
         Ys.addEventListener(this.element,type,fn);
         return this;
     };
 
-    F.prototype.hide = function() {
+    Ys.prototype.hide = function() {
         this.element.style.display = "none";
         return this;
     };
 
-    F.prototype.show = function() {
+    Ys.prototype.show = function() {
         this.element.style.display = "block";
         return this;
     };
 
-    F.prototype.addClass = function(className) {
+    Ys.prototype.addClass = function(className) {
         Ys.addClass(this.element,className);
         return this;
     };
 
-    F.prototype.removeClass = function(className) {
+    Ys.prototype.removeClass = function(className) {
         Ys.removeClass(this.element,className);
         return this;
     };
@@ -72,22 +71,24 @@
         return this.element;
     };*/
 
-    F.prototype.attr = function(attribute) {
+    Ys.prototype.attr = function(attribute) {
         return this.element.getAttribute(attribute);
     };
 
-    F.prototype.append = function(html) {
+    Ys.prototype.append = function(html) {
         this.element.innerHTML += html;
         return this;
     };
 
-    F.prototype.on = function() {
+    Ys.prototype.on = function() {
 
     };
 
-    F.prototype.each = function(fn) {
+    Ys.prototype.each = function(fn) {
 
     };
+
+    Ys.prototype.init.prototype = Ys.prototype;
 
     var defer = function () {
         var queue = [], value, i, callback;
@@ -109,11 +110,11 @@
         };
     };
         
-    var $class = function(className) {
+    /*var $class = function(className) {
         return document.getElementsByClassName(className);
-    };
+    };*/
     
-    Ys = $;
+    //Ys = $;
 
     window.Ys = Ys;
 
@@ -2125,6 +2126,7 @@ Ys.documentComplete = function(fn) {
         }
     };
 };
+/*
 Ys.getElementsByClassName = function (searchClass, node,tag) {
     var result=[];
     if(document.getElementsByClassName) {
@@ -2158,6 +2160,7 @@ Ys.getElementsByClassName = function (searchClass, node,tag) {
     return result;
     }
 };
+*/
  /*这里借用一下jquery的函数，返回浏览器的vendor前缀*/
 Ys.getVendorPrefix = function(index) {
     var body, i, style, transition, vendor ,transEndEventNames,animationEndEventNames;
@@ -3324,7 +3327,7 @@ Ys.formValidator = function(options) {
     self.infoWrap = [];
     self.validValue = [];
     self.callbacks = options.callbacks;
-     function matchStr(regexEnum,str,rgExp) {
+    function matchStr(regexEnum,str,rgExp) {
         if(!regexEnum[rgExp])return false;
         if(str.match(regexEnum[rgExp]) === null)return false;
         return true;
@@ -3333,7 +3336,7 @@ Ys.formValidator = function(options) {
     function checkOnce(index) {
         if(self.toVerifyItems[index].value !== '')Ys.addClass(self.itemsWrap[index],'notempty');
         else Ys.removeClass(self.itemsWrap[index],'notempty');
-         if(!matchStr(self.regexEnum,self.toVerifyItems[index].value,options.verifyType[index])) {
+        if(!matchStr(self.regexEnum,self.toVerifyItems[index].value,options.verifyType[index])) {
             Ys.removeClass(self.itemsWrap[index],'right');
             Ys.addClass(self.itemsWrap[index],'wrong');
             Ys.addClass(self.infoWrap[index],'active');
@@ -3358,6 +3361,7 @@ Ys.formValidator = function(options) {
     self.init = function() {
         
         for(var j = 0;j<options.toVerifyItems.length;j++) {
+
             self.toVerifyItems[j] = Ys('#' + options.toVerifyItems[j]).element;
             if(!matchStr(self.regexEnum,self.toVerifyItems[j].value,options.verifyType[j])) {
                 self.validValue[j] = false;
@@ -3370,7 +3374,7 @@ Ys.formValidator = function(options) {
             if(typeof(options.infoWrapIDs[j])!='undefined') {
                 self.infoWrap[j] = Ys('#' + options.infoWrapIDs[j]).element;
             }
-             Ys.addEventListener(self.toVerifyItems[j],'focus',function(j) {
+            Ys.addEventListener(self.toVerifyItems[j],'focus',function(j) {
                 return function(){
                     Ys.addClass(self.itemsWrap[j],'focus');
                     Ys.addClass(self.toVerifyItems[j],'focus');
@@ -3510,3 +3514,4 @@ Ys.loadJs = function(url) {
 
 /*网站配及=置及用户信息*/
 Ys.config = {};
+
