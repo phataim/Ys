@@ -116,6 +116,580 @@
     
     //Ys = $;
 
+Ys.documentComplete = function(fn) {
+    document.onreadystatechange = function() {
+        if(document.readyState === "complete")
+        {
+            if(typeof(fn) === 'function')fn();
+            //console.log(Ys.$('password').element.value);
+        }
+    };
+};
+/*
+Ys.getElementsByClassName = function (searchClass, node,tag) {
+    var result=[];
+    if(document.getElementsByClassName) {
+        var nodes =  (node || document).getElementsByClassName(searchClass);
+        for(var i=0 ;node = nodes[i++]; ) {
+            if(tag !== "*" && node.tagName === tag.toUpperCase()) {
+                result.push(node);
+            }
+        }
+        return result;
+    }else{
+        node = node || document;
+        tag = tag || "*";
+        var classes = searchClass.split(" "),
+        elements = (tag === "*" && node.all)? node.all : node.getElementsByTagName(tag),
+        patterns = [],
+        current,
+        match;
+        for( var l = 0;l<classes.length;l++) {
+            patterns.push(new RegExp("(^|\\s)" + classes[l] + "(\\s|$)"));
+        }
+        for( var j = 0;j<elements.length;j++) {
+            current = elements[j];
+            match = false;
+            for(var k=0, kl=patterns.length; k<kl; k++){
+                match = patterns[k].test(current.className);
+                if (!match)  break;
+        }
+        if (match)  result.push(current);
+    }
+    return result;
+    }
+};
+*/
+ /*这里借用一下jquery的函数，返回浏览器的vendor前缀*/
+Ys.getVendorPrefix = function(index) {
+    var body, i, style, transition, vendor ,transEndEventNames,animationEndEventNames;
+    body = document.body || document.documentElement;
+    style = body.style;
+    transition = "transition";
+    vendor = ["Moz", "Webkit", "O", "ms", "Khtml"];
+    transEndEventNames = ["transitionend", "webkitTransitionEnd", "oTransitionEnd otransitionend", "MSTransitionEnd", "transitionend"];
+    animationEndEventNames = ["animationend", "webkitAnimationEnd", "oAnimationEnd oanimationend", "MSAnimationEnd", "animationend"];
+    transition = transition.charAt(0).toUpperCase() + transition.substr(1);
+    i = 0;
+    while (i < vendor.length) {
+        if (typeof style[vendor[i] + transition] ===  "string") {
+            if(index ==1)return vendor[i];
+            if(index ==2)return transEndEventNames[i];
+            if(index ==3)return animationEndEventNames[i];
+        }
+        i++;
+    }
+    return false;
+};
+
+
+Ys.vendorPrefix = Ys.getVendorPrefix(1);
+Ys.vendorTransitionEnd = Ys.getVendorPrefix(2);
+Ys.vendorAnimationEnd = Ys.getVendorPrefix(3);
+
+/*判断是否为ie浏览器及其版本*/
+Ys._IEVersion = (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE6.0")?6:
+    (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE7.0")?7:
+    (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE8.0")?8:
+    (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE9.0")?9:
+    (navigator.appName == "Microsoft Internet Explorer")?10:undefined;
+
+Ys.addEventListener = function(element,type,fn) {
+    if(typeof element == 'undefined') return false;
+     if(element.addEventListener) {
+        element.addEventListener(type,fn,false);
+    }
+    else if(element.attachEvent) {
+    //将事件缓冲到该标签上,已解决this指向window(现fn内this指向element)和移除匿名事件问题
+        var _EventRef ='_'+type+'EventRef';
+        if(!element[_EventRef]) {
+            element[_EventRef]=[];
+        }
+        var _EventRefs = element[_EventRef];
+        var index;
+        for(index in _EventRefs) {
+            if(_EventRefs[index]['realFn'] == fn) {
+                return;
+            }
+        }
+        //propertychange事件统一为input事件
+        if(type == 'input')type = 'propertychange';
+        var nestFn = function() {
+            fn.apply(element,arguments);
+        };
+        element[_EventRef].push( {'realFn':fn,'nestFn':nestFn});
+        element.attachEvent('on'+type,nestFn);
+    }else {
+        element['on'+type] = fn;
+    }
+};
+
+Ys.removeListener = function(element,type,fn) {
+    if(typeof element == 'undefined') return false;
+    if(element.removeEventListener) {
+        element.removeEventListener(type,fn,false);
+    }
+    else if(element.detachEvent) {
+        var _EventRef ='_'+type+'EventRef';
+        if(!element[_EventRef]) {
+            element[_EventRef]=[];
+        }
+        var _EventRefs = element[_EventRef];
+        var index;
+        var nestFn;
+        for(index in _EventRefs) {
+            if(_EventRefs[index]['realFn'] == fn) {
+                nestFn = _EventRefs[index]['nestFn'];
+                if(index ==_EventRefs.length-1) {
+                    element[_EventRef] = _EventRefs.slice(0,index);
+                }else {
+                    element[_EventRef] = _EventRefs.slice(0,index).concat(_EventRefs.slice(index+1,_EventRefs.length-1));
+                }
+                break;
+            }
+        }
+        //propertychange事件统一为input事件
+        if(type == 'input')type = 'propertychange';
+        if(nestFn) {
+        element.detachEvent('on'+type,nestFn);
+        }
+    } else {
+        element['on'+type] = null;
+    }
+};
+
+Ys.stopDefault = function(e) {
+    if (e && e.preventDefault) {//如果是FF下执行这个
+        e.preventDefault();
+    } else {
+        window.event.returnValue = false;//如果是IE下执行这个
+    }
+    return false;
+};
+
+Ys.addClass = function(element,className) {
+    var classArray = null;
+    var c = false;
+    try {
+        classArray = element.className.split(' ');
+        for(var i = 0;i<classArray.length;i++) {
+            if(classArray[i] == className)c = true;
+        }
+        if(!c)classArray.push(className);
+        element.className = classArray.join(' ');
+    }catch(e) {}
+};
+
+Ys.removeClass = function(element,className) {
+    var classArray = null;
+    var newClassArray = [];
+    var c = false;
+    try {
+        classArray = element.className.split(' ');
+        for(var i = 0;i<classArray.length;i++) {
+            if(classArray[i] !== className)newClassArray.push(classArray[i]);
+        }
+         element.className = newClassArray.join(' ');
+    }catch(e) {}
+};
+
+
+/**
+ * 2012.8.20
+ *
+ * ajax控件
+ *
+ *
+ */
+
+Ys.ajax = function(options) {
+    
+    if(typeof options !=='object')options = {};
+    
+    options = {
+        type: options.type || 'POST',
+        url: options.url || '',
+        async: options.async || 'ture',
+        timeout: options.timeout || 5000,
+        onComplete: options.onComplete || function() {},
+        onError: options.onError || function() {},
+        onSuccess: options.onSuccess || function() {},
+        onSend: options.onSend || function() {},
+        onTimeout: options.onTimeout || function() {},
+        acceptdatatype: options.acceptdatatype || 'json',
+        data: options.data || '',
+        hasFile:options.hasFile|| false,
+        formDom:options.formDom|| null,
+        files:options.files || null
+    };
+    
+    
+    var self = this;
+    
+    self.Ajax = null;
+    
+    var createAjaxRequest = function() {
+        if (typeof XMLHttpRequest == 'undefined')
+        {
+            self.Ajax = new ActiveXObject("Microsoft.XMLHTTP");
+        } else {
+            self.Ajax = new XMLHttpRequest();
+        }
+    };
+    console.log(self);
+    /*超时时间*/
+    var timer;
+    
+    
+    var send = function() {
+        
+        self.Ajax.open(options.type, options.url, options.async);
+    
+        if (options.type == 'GET') {
+            self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
+            self.Ajax.send();
+        }else {
+            switch (options.acceptdatatype) {
+            case 'json':
+                self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
+                break;
+            default:
+                self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
+            }
+        }
+        
+        
+        self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
+        self.Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+        self.Ajax.send(options.data);
+        timer = setTimeout(function() {
+            if (typeof options.onTimeout == "function") options.onTimeout();
+            if (self.Ajax) {
+                self.Ajax.abort();
+                self.Ajax = null;
+            }
+            return 0;
+        },options.timeout);
+    };
+    
+    
+    
+    
+    var stateHandler = function() {
+        switch (self.Ajax.readyState) {
+            case 1:
+                break;
+            case 2:options.onSend();
+                break;
+            case 3:
+                break;
+            case 4:
+                try {
+                switch (self.Ajax.status) {
+                    case 200:
+                        if(timer)clearTimeout(timer);
+                        if(typeof options.onSuccess ===  'function')options.onSuccess(self.Ajax.responseText);
+                        if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
+                        break;
+                    case 404:
+                        if (timer) clearTimeout(timer);
+                        if(typeof options.onError ===  'function')options.onError(self.Ajax.responseText);
+                        options.onComplete(self.Ajax.responseText);
+                        break;
+                    default:
+                        if (timer) clearTimeout(timer);
+                        if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
+                    }
+                }catch(e) {}
+                break;
+            default:
+                break;
+        }
+    };
+    
+    
+    
+    var XHR2Send = function(file) {
+        
+        if(!file.files.length)
+        return;
+            
+        var formData = new FormData();
+        //XMLHttpRequest2 对象，支持上传文件
+        self.xhr2 = new XMLHttpRequest();
+        //已上传字节数
+        var uploadedBytes = 0;
+        //文件总字节数
+        var totalBytes = 0;
+        formData.append(file.name,file.files[0]);
+        Ys.addEventListener(self.xhr2.upload,'progress',function(e) {
+            if (e.lengthComputable) {
+                uploadedBytes = e.loaded;
+                totalBytes = e.total;
+                var percentComplete = Math.round(uploadedBytes * 100 / totalBytes),
+                //已上传文件大小
+                bytesTransfered = '';
+                if (uploadedBytes > 1024 * 1024)bytesTransfered = Math.round(uploadedBytes * 100 / (1024 * 1024)) / 100 + 'MB';
+                else bytesTransfered = Math.round(uploadedBytes * 100 / 1024) / 100 + 'KB';
+                //console.log(bytesTransfered);
+                //上传完成，显示上传文件信息
+                if(percentComplete ===  100) {}
+            } else {
+            }
+        });
+        
+        Ys.addEventListener(self.xhr2,'load',function(e) {
+            if(typeof(options.onSuccess)=='function') {
+                options.onSuccess(e.target.responseText);
+            }
+            self.destruct();
+        });
+        Ys.addEventListener(self.xhr2,'abort',function(e) {
+            self.destruct();
+        });
+        Ys.addEventListener(self.xhr2,'error',function(e) {
+            if(typeof(options.onError)=='function') {
+                options.onError(e.target.responseText);
+            }
+            self.destruct();
+        });
+        
+            
+        self.xhr2.open(options.type,options.url,options.async);
+        self.xhr2.send(formData);
+     };
+     var createIframe = function(id, uri) {
+        //create frame
+        var frameId = 'iframe' + id;
+        var iframeHtml = '<iframe id="' + frameId + '" name="' + frameId + '" style="position:absolute; top:-9999px; left:-9999px"';
+        if(window.ActiveXObject)
+        {
+            if(typeof uri== 'boolean'){
+                iframeHtml += ' src="' + 'javascript:false' + '"';
+            }
+            else if(typeof uri== 'string'){
+                iframeHtml += ' src="' + uri + '"';
+            }
+        }
+        iframeHtml += ' />';
+         jQuery(iframeHtml).appendTo(document.body);
+         //var tmp = document.createElement('div');
+        //document.body.insertBefore(tmp,document.body.firstChild);
+        //tmp.innerHTML=iframeHtml;
+         return Ys(frameId).element;
+    };
+     var createForm = function(id, fileElement, data) {
+        var formId = 'Form' + id;
+        var fileId = 'File' + id;
+        var form = jQuery('<form  action="" method="POST" name="' + formId + '" id="' + formId + '" enctype="multipart/form-data"></form>');    
+        if(data)
+        {
+            for(var i in data)
+            {
+                jQuery('<input type="hidden" name="' + i + '" value="' + data[i] + '" />').appendTo(form);
+            }            
+        }        
+        var oldElement = jQuery(fileElement);
+        var newElement = jQuery(oldElement).clone();
+        jQuery(oldElement).attr('id', fileId);
+        jQuery(oldElement).before(newElement);
+        jQuery(oldElement).appendTo(form);
+         //set attributes
+        jQuery(form).css('position', 'absolute');
+        jQuery(form).css('top', '-1200px');
+        jQuery(form).css('left', '-1200px');
+        jQuery(form).appendTo('body');        
+        return form;
+    };
+     var useIframeInit = function(){
+        var id = new Date().getTime();
+        self.iframe = createIframe(id);
+        self.form = createForm(id,options.files,(typeof(options.data)=='undefined'?false:options.data));
+        var frameId = 'iframe' + id;
+        var formId = 'form' + id;
+         var requestDone = false;
+        // Create the request object
+        var xml = {};
+        // Wait for a response to come back
+        var uploadCallback = function(isTimeout) {
+            var io = document.getElementById(frameId);
+            try {
+                if(io.contentWindow) {
+                    xml.responseText = io.contentWindow.document.body?io.contentWindow.document.body.innerHTML:null;
+                    xml.responseXML = io.contentWindow.document.XMLDocument?io.contentWindow.document.XMLDocument:io.contentWindow.document;
+                } else if(io.contentDocument) {
+                    xml.responseText = io.contentDocument.document.body?io.contentDocument.document.body.innerHTML:null;
+                    xml.responseXML = io.contentDocument.document.XMLDocument?io.contentDocument.document.XMLDocument:io.contentDocument.document;
+                }
+            } catch(e) {
+                //jQuery.handleError(s, xml, null, e);
+            }
+            if ( xml || isTimeout == "timeout") {
+                requestDone = true;
+                var status;
+                try {
+                    status = isTimeout != "timeout" ? "success" : "error";
+                    // Make sure that the request was successful or notmodified
+                    if ( status != "error" ) {
+                        // process the data (runs the xml through httpData regardless of callback)
+                        var data = xml.responseText ? xml.responseText : xml.responseXML;
+                        // If a local callback was specified, fire it and pass it the data
+                        if ( options.onSuccess ) options.onSuccess( data, status );
+                     } //else console.log(e);//jQuery.handleError(s, xml, status);
+                } catch(e) {
+                    status = "error";
+                    //jQuery.handleError(s, xml, status, e);
+                }
+                 // Process result
+                if ( options.onComplete )
+                    options.onComplete(xml, status);
+                 jQuery(io).unbind();
+                 setTimeout(function()
+                                {    try {
+                                        jQuery(io).remove();
+                                        self.form.remove();
+                                    } catch(e) {
+                                        //console.log(e);
+                                        //jQuery.handleError(s, xml, null, e);
+                                    }                            
+                                 }, 100);
+                 xml = null;
+            }
+        };
+        // Timeout checker
+        if ( options.timeout > 0 ) {
+            setTimeout(function(){
+                // Check to see if the request is still happening
+                if( !requestDone ) uploadCallback( "timeout" );
+            }, options.timeout);
+        }
+        try {
+            self.form.attr('action', options.url);
+            self.form.attr('method', 'POST');
+            self.form.attr('target', frameId);
+            if(self.form.encoding) {
+                self.form.attr('encoding', 'multipart/form-data');
+            } else {
+                self.form.attr('enctype', 'multipart/form-data');
+            }
+            self.form.submit();
+        } catch(e) {
+            jQuery.handleError(s, xml, null, e);
+        }
+        jQuery('#' + frameId).load(uploadCallback);
+        return {abort: function () {}};
+    };
+    
+    
+    var iframeSend = function() {
+        
+     };
+     self.destruct = function() {
+        try{
+            self.iframe.src ='';
+            searchClassf.iframe.parentNode.removeChild(self.iframe);
+            self.iframe = null;
+            Ys.removeListener(self.xhr2.upload,'progress');
+            Ys.removeListener(self.xhr2,'load');
+            Ys.removeListener(self.xhr2,'abort');
+            Ys.removeListener(self.xhr2,'error');
+            self.xhr2 = null;
+        }catch(e){}
+    };
+    
+    var run = function() {
+        if(options.hasFile) {
+            /*html5上传*/
+            if(typeof(window.FileReader) === 'function'){
+                self.Ajax =new XHR2Send(options.files);
+            } else {
+            /*iframe上传*/
+                useIframeInit();
+                iframeSend();
+            }
+        }else {
+            createAjaxRequest();
+            self.Ajax.onreadystatechange = stateHandler;
+            send();
+        }
+    };
+    
+    run();
+
+};
+
+
+/*几个常用的tween算法*/
+Ys.Tween = {
+    Linear: function( t, b, c, d) { return c*t/d + b; },
+    Quad: {
+        easeIn: function(t,b,c,d) {
+            return c*(t/=d)*t + b;
+        },
+        easeOut: function(t,b,c,d) {
+            return -c *(t/=d)*(t-2) + b;
+        },
+        easeInOut: function(t,b,c,d) {
+            if ((t/=d/2) < 1) {return c/2*t*t + b;}
+            return -c/2 * ((--t)*(t-2) - 1) + b;
+        }
+    },
+    Quart: {
+        easeIn: function(t,b,c,d) {
+            return c*(t/=d)*t*t*t + b;
+        },
+        easeOut: function(t,b,c,d) {
+            return -c * ((t = t/d-1)*t*t*t - 1) + b;
+        },
+        easeInOut: function(t,b,c,d) {
+            if ((t/=d/2) < 1) {return c/2*t*t*t*t + b;}
+            return -c/2 * ((t-=2)*t*t*t - 2) + b;
+        }
+    },
+    Back: {
+        easeOut: function(t, b, c, d, s) {
+            if (s === undefined) s = 1.70158;
+            return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
+        }
+    },
+    Bounce: {
+        easeOut: function(t, b, c, d) {
+            if ((t /= d) < (1 / 2.75)) {
+                return c * (7.5625 * t * t) + b;
+            } else if (t < (2 / 2.75)) {
+                return c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
+            } else if (t < (2.5 / 2.75)) {
+                return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
+            } else {
+                return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
+            }
+        }
+    }
+};
+
+
+
+Ys.showOverlay = function() {
+    var overlay = document.createElement('div');
+    overlay.id = 'overlay';
+    document.body.insertBefore(overlay,document.body.firstChild);
+};
+
+Ys.loadJs = function(url) {
+    var i;
+    var ss = document.getElementsByTagName("script");
+    for (i = 0; i < ss.length; i++) {
+        if (ss[i].src && ss[i].src.indexOf(url) != -1) {
+            return;
+        }
+    }
+    var s = document.createElement("script");
+    s.type = "text/javascript";
+    s.src = url;
+    var head = document.getElementsByTagName("head")[0];
+    head.appendChild(s);
+};
+
     
 
 /*!
@@ -2113,581 +2687,6 @@ if ( typeof define === "function" && define.amd ) {
 Ys.find = Sizzle;
 
 })( window );
-
-//var $ = Ys;
-Ys.documentComplete = function(fn) {
-    document.onreadystatechange = function() {
-        if(document.readyState === "complete")
-        {
-            if(typeof(fn) === 'function')fn();
-            //console.log(Ys.$('password').element.value);
-        }
-    };
-};
-/*
-Ys.getElementsByClassName = function (searchClass, node,tag) {
-    var result=[];
-    if(document.getElementsByClassName) {
-        var nodes =  (node || document).getElementsByClassName(searchClass);
-        for(var i=0 ;node = nodes[i++]; ) {
-            if(tag !== "*" && node.tagName === tag.toUpperCase()) {
-                result.push(node);
-            }
-        }
-        return result;
-    }else{
-        node = node || document;
-        tag = tag || "*";
-        var classes = searchClass.split(" "),
-        elements = (tag === "*" && node.all)? node.all : node.getElementsByTagName(tag),
-        patterns = [],
-        current,
-        match;
-        for( var l = 0;l<classes.length;l++) {
-            patterns.push(new RegExp("(^|\\s)" + classes[l] + "(\\s|$)"));
-        }
-        for( var j = 0;j<elements.length;j++) {
-            current = elements[j];
-            match = false;
-            for(var k=0, kl=patterns.length; k<kl; k++){
-                match = patterns[k].test(current.className);
-                if (!match)  break;
-        }
-        if (match)  result.push(current);
-    }
-    return result;
-    }
-};
-*/
- /*这里借用一下jquery的函数，返回浏览器的vendor前缀*/
-Ys.getVendorPrefix = function(index) {
-    var body, i, style, transition, vendor ,transEndEventNames,animationEndEventNames;
-    body = document.body || document.documentElement;
-    style = body.style;
-    transition = "transition";
-    vendor = ["Moz", "Webkit", "O", "ms", "Khtml"];
-    transEndEventNames = ["transitionend", "webkitTransitionEnd", "oTransitionEnd otransitionend", "MSTransitionEnd", "transitionend"];
-    animationEndEventNames = ["animationend", "webkitAnimationEnd", "oAnimationEnd oanimationend", "MSAnimationEnd", "animationend"];
-    transition = transition.charAt(0).toUpperCase() + transition.substr(1);
-    i = 0;
-    while (i < vendor.length) {
-        if (typeof style[vendor[i] + transition] ===  "string") {
-            if(index ==1)return vendor[i];
-            if(index ==2)return transEndEventNames[i];
-            if(index ==3)return animationEndEventNames[i];
-        }
-        i++;
-    }
-    return false;
-};
-
-
-Ys.vendorPrefix = Ys.getVendorPrefix(1);
-Ys.vendorTransitionEnd = Ys.getVendorPrefix(2);
-Ys.vendorAnimationEnd = Ys.getVendorPrefix(3);
-
-/*判断是否为ie浏览器及其版本*/
-Ys._IEVersion = (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE6.0")?6:
-    (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE7.0")?7:
-    (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE8.0")?8:
-    (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE9.0")?9:
-    (navigator.appName == "Microsoft Internet Explorer")?10:undefined;
-
-Ys.addEventListener = function(element,type,fn) {
-    if(typeof element == 'undefined') return false;
-     if(element.addEventListener) {
-        element.addEventListener(type,fn,false);
-    }
-    else if(element.attachEvent) {
-    //将事件缓冲到该标签上,已解决this指向window(现fn内this指向element)和移除匿名事件问题
-        var _EventRef ='_'+type+'EventRef';
-        if(!element[_EventRef]) {
-            element[_EventRef]=[];
-        }
-        var _EventRefs = element[_EventRef];
-        var index;
-        for(index in _EventRefs) {
-            if(_EventRefs[index]['realFn'] == fn) {
-                return;
-            }
-        }
-        //propertychange事件统一为input事件
-        if(type == 'input')type = 'propertychange';
-        var nestFn = function() {
-            fn.apply(element,arguments);
-        };
-        element[_EventRef].push( {'realFn':fn,'nestFn':nestFn});
-        element.attachEvent('on'+type,nestFn);
-    }else {
-        element['on'+type] = fn;
-    }
-};
-
-Ys.removeListener = function(element,type,fn) {
-    if(typeof element == 'undefined') return false;
-    if(element.removeEventListener) {
-        element.removeEventListener(type,fn,false);
-    }
-    else if(element.detachEvent) {
-        var _EventRef ='_'+type+'EventRef';
-        if(!element[_EventRef]) {
-            element[_EventRef]=[];
-        }
-        var _EventRefs = element[_EventRef];
-        var index;
-        var nestFn;
-        for(index in _EventRefs) {
-            if(_EventRefs[index]['realFn'] == fn) {
-                nestFn = _EventRefs[index]['nestFn'];
-                if(index ==_EventRefs.length-1) {
-                    element[_EventRef] = _EventRefs.slice(0,index);
-                }else {
-                    element[_EventRef] = _EventRefs.slice(0,index).concat(_EventRefs.slice(index+1,_EventRefs.length-1));
-                }
-                break;
-            }
-        }
-        //propertychange事件统一为input事件
-        if(type == 'input')type = 'propertychange';
-        if(nestFn) {
-        element.detachEvent('on'+type,nestFn);
-        }
-    } else {
-        element['on'+type] = null;
-    }
-};
-
-Ys.stopDefault = function(e) {
-    if (e && e.preventDefault) {//如果是FF下执行这个
-        e.preventDefault();
-    } else {
-        window.event.returnValue = false;//如果是IE下执行这个
-    }
-    return false;
-};
-
-Ys.addClass = function(element,className) {
-    var classArray = null;
-    var c = false;
-    try {
-        classArray = element.className.split(' ');
-        for(var i = 0;i<classArray.length;i++) {
-            if(classArray[i] == className)c = true;
-        }
-        if(!c)classArray.push(className);
-        element.className = classArray.join(' ');
-    }catch(e) {}
-};
-
-Ys.removeClass = function(element,className) {
-    var classArray = null;
-    var newClassArray = [];
-    var c = false;
-    try {
-        classArray = element.className.split(' ');
-        for(var i = 0;i<classArray.length;i++) {
-            if(classArray[i] !== className)newClassArray.push(classArray[i]);
-        }
-         element.className = newClassArray.join(' ');
-    }catch(e) {}
-};
-
-
-/**
- * 2012.8.20
- *
- * ajax控件
- *
- *
- */
-
-Ys.ajax = function(options) {
-    
-    if(typeof options !=='object')options = {};
-    
-    options = {
-        type: options.type || 'POST',
-        url: options.url || '',
-        async: options.async || 'ture',
-        timeout: options.timeout || 5000,
-        onComplete: options.onComplete || function() {},
-        onError: options.onError || function() {},
-        onSuccess: options.onSuccess || function() {},
-        onSend: options.onSend || function() {},
-        onTimeout: options.onTimeout || function() {},
-        acceptdatatype: options.acceptdatatype || 'json',
-        data: options.data || '',
-        hasFile:options.hasFile|| false,
-        formDom:options.formDom|| null,
-        files:options.files || null
-    };
-    
-    
-    var self = this;
-    
-    self.Ajax = null;
-    
-    var createAjaxRequest = function() {
-        if (typeof XMLHttpRequest == 'undefined')
-        {
-            self.Ajax = new ActiveXObject("Microsoft.XMLHTTP");
-        } else {
-            self.Ajax = new XMLHttpRequest();
-        }
-    };
-    
-    /*超时时间*/
-    var timer;
-    
-    
-    var send = function() {
-        
-        self.Ajax.open(options.type, options.url, options.async);
-    
-        if (options.type == 'GET') {
-            self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
-            self.Ajax.send();
-        }else {
-            switch (options.acceptdatatype) {
-            case 'json':
-                self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
-                break;
-            default:
-                self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
-            }
-        }
-        
-        
-        self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
-        self.Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-        self.Ajax.send(options.data);
-        timer = setTimeout(function() {
-            if (typeof options.onTimeout == "function") options.onTimeout();
-            if (self.Ajax) {
-                self.Ajax.abort();
-                self.Ajax = null;
-            }
-            return 0;
-        },options.timeout);
-    };
-    
-    
-    
-    
-    var stateHandler = function() {
-        switch (self.Ajax.readyState) {
-            case 1:
-                break;
-            case 2:options.onSend();
-                break;
-            case 3:
-                break;
-            case 4:
-                try {
-                switch (self.Ajax.status) {
-                    case 200:
-                        if(timer)clearTimeout(timer);
-                        if(typeof options.onSuccess ===  'function')options.onSuccess(self.Ajax.responseText);
-                        if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
-                        break;
-                    case 404:
-                        if (timer) clearTimeout(timer);
-                        if(typeof options.onError ===  'function')options.onError(self.Ajax.responseText);
-                        options.onComplete(self.Ajax.responseText);
-                        break;
-                    default:
-                        if (timer) clearTimeout(timer);
-                        if(typeof options.onComplete ===  'function')options.onComplete(self.Ajax.responseText);
-                    }
-                }catch(e) {}
-                break;
-            default:
-                break;
-        }
-    };
-    
-    
-    
-    var XHR2Send = function(file) {
-        
-        if(!file.files.length)
-        return;
-            
-        var formData = new FormData();
-        //XMLHttpRequest2 对象，支持上传文件
-        self.xhr2 = new XMLHttpRequest();
-        //已上传字节数
-        var uploadedBytes = 0;
-        //文件总字节数
-        var totalBytes = 0;
-        formData.append(file.name,file.files[0]);
-        Ys.addEventListener(self.xhr2.upload,'progress',function(e) {
-            if (e.lengthComputable) {
-                uploadedBytes = e.loaded;
-                totalBytes = e.total;
-                var percentComplete = Math.round(uploadedBytes * 100 / totalBytes),
-                //已上传文件大小
-                bytesTransfered = '';
-                if (uploadedBytes > 1024 * 1024)bytesTransfered = Math.round(uploadedBytes * 100 / (1024 * 1024)) / 100 + 'MB';
-                else bytesTransfered = Math.round(uploadedBytes * 100 / 1024) / 100 + 'KB';
-                //console.log(bytesTransfered);
-                //上传完成，显示上传文件信息
-                if(percentComplete ===  100) {}
-            } else {
-            }
-        });
-        
-        Ys.addEventListener(self.xhr2,'load',function(e) {
-            if(typeof(options.onSuccess)=='function') {
-                options.onSuccess(e.target.responseText);
-            }
-            self.destruct();
-        });
-        Ys.addEventListener(self.xhr2,'abort',function(e) {
-            self.destruct();
-        });
-        Ys.addEventListener(self.xhr2,'error',function(e) {
-            if(typeof(options.onError)=='function') {
-                options.onError(e.target.responseText);
-            }
-            self.destruct();
-        });
-        
-            
-        self.xhr2.open(options.type,options.url,options.async);
-        self.xhr2.send(formData);
-     };
-     var createIframe = function(id, uri) {
-        //create frame
-        var frameId = 'iframe' + id;
-        var iframeHtml = '<iframe id="' + frameId + '" name="' + frameId + '" style="position:absolute; top:-9999px; left:-9999px"';
-        if(window.ActiveXObject)
-        {
-            if(typeof uri== 'boolean'){
-                iframeHtml += ' src="' + 'javascript:false' + '"';
-            }
-            else if(typeof uri== 'string'){
-                iframeHtml += ' src="' + uri + '"';
-            }
-        }
-        iframeHtml += ' />';
-         jQuery(iframeHtml).appendTo(document.body);
-         //var tmp = document.createElement('div');
-        //document.body.insertBefore(tmp,document.body.firstChild);
-        //tmp.innerHTML=iframeHtml;
-         return Ys(frameId).element;
-    };
-     var createForm = function(id, fileElement, data) {
-        var formId = 'Form' + id;
-        var fileId = 'File' + id;
-        var form = jQuery('<form  action="" method="POST" name="' + formId + '" id="' + formId + '" enctype="multipart/form-data"></form>');    
-        if(data)
-        {
-            for(var i in data)
-            {
-                jQuery('<input type="hidden" name="' + i + '" value="' + data[i] + '" />').appendTo(form);
-            }            
-        }        
-        var oldElement = jQuery(fileElement);
-        var newElement = jQuery(oldElement).clone();
-        jQuery(oldElement).attr('id', fileId);
-        jQuery(oldElement).before(newElement);
-        jQuery(oldElement).appendTo(form);
-         //set attributes
-        jQuery(form).css('position', 'absolute');
-        jQuery(form).css('top', '-1200px');
-        jQuery(form).css('left', '-1200px');
-        jQuery(form).appendTo('body');        
-        return form;
-    };
-     var useIframeInit = function(){
-        var id = new Date().getTime();
-        self.iframe = createIframe(id);
-        self.form = createForm(id,options.files,(typeof(options.data)=='undefined'?false:options.data));
-        var frameId = 'iframe' + id;
-        var formId = 'form' + id;
-         var requestDone = false;
-        // Create the request object
-        var xml = {};
-        // Wait for a response to come back
-        var uploadCallback = function(isTimeout) {
-            var io = document.getElementById(frameId);
-            try {
-                if(io.contentWindow) {
-                    xml.responseText = io.contentWindow.document.body?io.contentWindow.document.body.innerHTML:null;
-                    xml.responseXML = io.contentWindow.document.XMLDocument?io.contentWindow.document.XMLDocument:io.contentWindow.document;
-                } else if(io.contentDocument) {
-                    xml.responseText = io.contentDocument.document.body?io.contentDocument.document.body.innerHTML:null;
-                    xml.responseXML = io.contentDocument.document.XMLDocument?io.contentDocument.document.XMLDocument:io.contentDocument.document;
-                }
-            } catch(e) {
-                //jQuery.handleError(s, xml, null, e);
-            }
-            if ( xml || isTimeout == "timeout") {
-                requestDone = true;
-                var status;
-                try {
-                    status = isTimeout != "timeout" ? "success" : "error";
-                    // Make sure that the request was successful or notmodified
-                    if ( status != "error" ) {
-                        // process the data (runs the xml through httpData regardless of callback)
-                        var data = xml.responseText ? xml.responseText : xml.responseXML;
-                        // If a local callback was specified, fire it and pass it the data
-                        if ( options.onSuccess ) options.onSuccess( data, status );
-                     } //else console.log(e);//jQuery.handleError(s, xml, status);
-                } catch(e) {
-                    status = "error";
-                    //jQuery.handleError(s, xml, status, e);
-                }
-                 // Process result
-                if ( options.onComplete )
-                    options.onComplete(xml, status);
-                 jQuery(io).unbind();
-                 setTimeout(function()
-                                {    try {
-                                        jQuery(io).remove();
-                                        self.form.remove();
-                                    } catch(e) {
-                                        //console.log(e);
-                                        //jQuery.handleError(s, xml, null, e);
-                                    }                            
-                                 }, 100);
-                 xml = null;
-            }
-        };
-        // Timeout checker
-        if ( options.timeout > 0 ) {
-            setTimeout(function(){
-                // Check to see if the request is still happening
-                if( !requestDone ) uploadCallback( "timeout" );
-            }, options.timeout);
-        }
-        try {
-            self.form.attr('action', options.url);
-            self.form.attr('method', 'POST');
-            self.form.attr('target', frameId);
-            if(self.form.encoding) {
-                self.form.attr('encoding', 'multipart/form-data');
-            } else {
-                self.form.attr('enctype', 'multipart/form-data');
-            }
-            self.form.submit();
-        } catch(e) {
-            jQuery.handleError(s, xml, null, e);
-        }
-        jQuery('#' + frameId).load(uploadCallback);
-        return {abort: function () {}};
-    };
-    
-    
-    var iframeSend = function() {
-        
-     };
-     self.destruct = function() {
-        try{
-            self.iframe.src ='';
-            searchClassf.iframe.parentNode.removeChild(self.iframe);
-            self.iframe = null;
-            Ys.removeListener(self.xhr2.upload,'progress');
-            Ys.removeListener(self.xhr2,'load');
-            Ys.removeListener(self.xhr2,'abort');
-            Ys.removeListener(self.xhr2,'error');
-            self.xhr2 = null;
-        }catch(e){}
-    };
-    
-    var run = function() {
-        if(options.hasFile) {
-            /*html5上传*/
-            if(typeof(window.FileReader) === 'function'){
-                self.Ajax =new XHR2Send(options.files);
-            } else {
-            /*iframe上传*/
-                useIframeInit();
-                iframeSend();
-            }
-        }else {
-            createAjaxRequest();
-            self.Ajax.onreadystatechange = stateHandler;
-            send();
-        }
-    };
-    
-    run();
-
-};
-
-
-/*几个常用的tween算法*/
-Ys.Tween = {
-    Linear: function( t, b, c, d) { return c*t/d + b; },
-    Quad: {
-        easeIn: function(t,b,c,d) {
-            return c*(t/=d)*t + b;
-        },
-        easeOut: function(t,b,c,d) {
-            return -c *(t/=d)*(t-2) + b;
-        },
-        easeInOut: function(t,b,c,d) {
-            if ((t/=d/2) < 1) {return c/2*t*t + b;}
-            return -c/2 * ((--t)*(t-2) - 1) + b;
-        }
-    },
-    Quart: {
-        easeIn: function(t,b,c,d) {
-            return c*(t/=d)*t*t*t + b;
-        },
-        easeOut: function(t,b,c,d) {
-            return -c * ((t = t/d-1)*t*t*t - 1) + b;
-        },
-        easeInOut: function(t,b,c,d) {
-            if ((t/=d/2) < 1) {return c/2*t*t*t*t + b;}
-            return -c/2 * ((t-=2)*t*t*t - 2) + b;
-        }
-    },
-    Back: {
-        easeOut: function(t, b, c, d, s) {
-            if (s === undefined) s = 1.70158;
-            return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
-        }
-    },
-    Bounce: {
-        easeOut: function(t, b, c, d) {
-            if ((t /= d) < (1 / 2.75)) {
-                return c * (7.5625 * t * t) + b;
-            } else if (t < (2 / 2.75)) {
-                return c * (7.5625 * (t -= (1.5 / 2.75)) * t + 0.75) + b;
-            } else if (t < (2.5 / 2.75)) {
-                return c * (7.5625 * (t -= (2.25 / 2.75)) * t + 0.9375) + b;
-            } else {
-                return c * (7.5625 * (t -= (2.625 / 2.75)) * t + 0.984375) + b;
-            }
-        }
-    }
-};
-
-
-
-Ys.showOverlay = function() {
-    var overlay = document.createElement('div');
-    overlay.id = 'overlay';
-    document.body.insertBefore(overlay,document.body.firstChild);
-};
-
-Ys.loadJs = function(url) {
-    var i;
-    var ss = document.getElementsByTagName("script");
-    for (i = 0; i < ss.length; i++) {
-        if (ss[i].src && ss[i].src.indexOf(url) != -1) {
-            return;
-        }
-    }
-    var s = document.createElement("script");
-    s.type = "text/javascript";
-    s.src = url;
-    var head = document.getElementsByTagName("head")[0];
-    head.appendChild(s);
-};
 
 window.Ys = Ys;
 
