@@ -80,8 +80,21 @@
         return this;
     };
 
-    Ys.prototype.on = function() {
-
+    Ys.prototype.on = function(type,selector,fn) {
+        if(typeof(selector) === 'string') {
+            Ys.addEventListener(this.element,type,function(){
+                var t = Ys.find(selector);
+                if (Ys.in_array(t,Ys.getEventTarget(event)) ){
+                    console.log(this);
+                    fn();
+                }
+            });
+        } else {
+            //console.log(arguments);
+            //Ys.addEventListener.call(fn,type,arguments[1]);
+            Ys.addEventListener(this.element,type,arguments[1]);
+        }
+        return this;
     };
 
     Ys.prototype.each = function(fn) {
@@ -194,6 +207,11 @@ Ys._IEVersion = (navigator.appName == "Microsoft Internet Explorer" && navigator
     (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion .split(";")[1].replace(/[ ]/g,"")=="MSIE9.0")?9:
     (navigator.appName == "Microsoft Internet Explorer")?10:undefined;
 
+Ys.getEventTarget = function(e) {
+    e = e || window.event;
+    return e.target || e.srcElement;
+};
+
 Ys.addEventListener = function(element,type,fn) {
     if(typeof element == 'undefined') return false;
      if(element.addEventListener) {
@@ -293,7 +311,19 @@ Ys.removeClass = function(element,className) {
     }catch(e) {}
 };
 
-
+Ys.in_array = function(arr,target){
+    
+ 
+    // 遍历是否在数组中
+    for(var i=0,k=arr.length;i<k;i++){
+        if(target == arr[i]){
+            return true;
+        }
+    }
+ 
+    // 如果不在数组中就会返回false
+    return false;
+};
 /**
  * 2012.8.20
  *
