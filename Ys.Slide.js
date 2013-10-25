@@ -270,13 +270,13 @@ Ys.Slide = function(options) {
             slider.style[vendorTransform]="translateX("+ sliderTranslate +"px)";
             slider.style[vendorTiming]="ease";
             slider.style[vendorDuration] = css3Duration+"ms";
-            Ys.addEventListener(slider,Ys.vendorTransitionEnd,function end() {
+            Ys(slider).on(Ys.vendorTransitionEnd,function end() {
                 Ys(self.slideBox[before]).hide();
                 self.slideBox[onShow].style.left = 0;
                 slider.style[vendorTransform]="";
                 slider.style[vendorTiming]="";
                 slider.style[vendorDuration]="";
-                slider.removeEventListener(Ys.vendorTransitionEnd,end);
+                Ys(slider).unbind(Ys.vendorTransitionEnd,end);
                 sliding = 0;
                 if(typeof callback === 'function')callback();
             });

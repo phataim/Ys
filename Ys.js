@@ -22,7 +22,7 @@
         if(typeof(selector) === "object") {
             this.element = selector;
         } else {
-            results = Ys.find(selector);
+            results = this.find(selector);
             this.length = results.length;
             if (results.length === 0) return null;
             if(results.length === 1)this.element = results[0];
@@ -43,7 +43,12 @@
     };
 
     Ys.prototype.bind =function(type,fn) {
-        Ys.addEventListener(this.element,type,fn);
+        this.addEventListener(this.element,type,fn);
+        return this;
+    };
+
+    Ys.prototype.unbind =function(type,fn) {
+        this.removeEventListener(this.element,type,fn);
         return this;
     };
 
@@ -82,8 +87,8 @@
 
     Ys.prototype.on = function(type,selector,fn) {
         if(typeof(selector) === 'string') {
-            Ys.addEventListener(this.element,type,function(){
-                var t = Ys.find(selector);
+            this.addEventListener(this.element,type,function(){
+                var t = this.find(selector);
                 if (Ys.in_array(t,Ys.getEventTarget(event)) ){
                     console.log(this);
                     fn();
@@ -91,8 +96,8 @@
             });
         } else {
             //console.log(arguments);
-            //Ys.addEventListener.call(fn,type,arguments[1]);
-            Ys.addEventListener(this.element,type,arguments[1]);
+            //this.addEventListener.call(fn,type,arguments[1]);
+            this.addEventListener(this.element,type,arguments[1]);
         }
         return this;
     };
@@ -100,6 +105,7 @@
     Ys.prototype.each = function(fn) {
 
     };
+
 
     Ys.prototype.init.prototype = Ys.prototype;
 
@@ -122,6 +128,8 @@
             }
         };
     };
+
+    
         
     /*var $class = function(className) {
         return document.getElementsByClassName(className);
@@ -212,7 +220,7 @@ Ys.getEventTarget = function(e) {
     return e.target || e.srcElement;
 };
 
-Ys.addEventListener = function(element,type,fn) {
+Ys.prototype.addEventListener = function(element,type,fn) {
     if(typeof element == 'undefined') return false;
      if(element.addEventListener) {
         element.addEventListener(type,fn,false);
@@ -242,7 +250,7 @@ Ys.addEventListener = function(element,type,fn) {
     }
 };
 
-Ys.removeListener = function(element,type,fn) {
+Ys.prototype.removeEventListener = function(element,type,fn) {
     if(typeof element == 'undefined') return false;
     if(element.removeEventListener) {
         element.removeEventListener(type,fn,false);
@@ -276,7 +284,7 @@ Ys.removeListener = function(element,type,fn) {
     }
 };
 
-Ys.stopDefault = function(e) {
+Ys.prototype.stopDefault = function(e) {
     if (e && e.preventDefault) {//如果是FF下执行这个
         e.preventDefault();
     } else {
@@ -366,7 +374,7 @@ Ys.ajax = function(options) {
             self.Ajax = new XMLHttpRequest();
         }
     };
-    console.log(self);
+    //console.log(self);
     /*超时时间*/
     var timer;
     
@@ -452,7 +460,7 @@ Ys.ajax = function(options) {
         //文件总字节数
         var totalBytes = 0;
         formData.append(file.name,file.files[0]);
-        Ys.addEventListener(self.xhr2.upload,'progress',function(e) {
+        this.addEventListener(self.xhr2.upload,'progress',function(e) {
             if (e.lengthComputable) {
                 uploadedBytes = e.loaded;
                 totalBytes = e.total;
@@ -468,16 +476,16 @@ Ys.ajax = function(options) {
             }
         });
         
-        Ys.addEventListener(self.xhr2,'load',function(e) {
+        this.addEventListener(self.xhr2,'load',function(e) {
             if(typeof(options.onSuccess)=='function') {
                 options.onSuccess(e.target.responseText);
             }
             self.destruct();
         });
-        Ys.addEventListener(self.xhr2,'abort',function(e) {
+        this.addEventListener(self.xhr2,'abort',function(e) {
             self.destruct();
         });
-        Ys.addEventListener(self.xhr2,'error',function(e) {
+        this.addEventListener(self.xhr2,'error',function(e) {
             if(typeof(options.onError)=='function') {
                 options.onError(e.target.responseText);
             }
@@ -2714,7 +2722,7 @@ if ( typeof define === "function" && define.amd ) {
 }
 // EXPOSE
 
-Ys.find = Sizzle;
+Ys.prototype.find = Sizzle;
 
 })( window );
 
@@ -2724,4 +2732,3 @@ window.Ys = Ys;
 
 /*网站配及=置及用户信息*/
 Ys.config = {};
-

@@ -109,13 +109,13 @@ Ys.formValidator = function(options) {
             if(typeof(options.infoWrapIDs[j])!='undefined') {
                 self.infoWrap[j] = Ys('#' + options.infoWrapIDs[j]).element;
             }
-            Ys.addEventListener(self.toVerifyItems[j],'focus',function(j) {
+            Ys(self.toVerifyItems[j]).bind('focus',function(j) {
                 return function(){
                     Ys.addClass(self.itemsWrap[j],'focus');
                     Ys.addClass(self.toVerifyItems[j],'focus');
                 };
             }(j));
-             Ys.addEventListener(self.toVerifyItems[j],'blur',function(j) {
+             Ys(self.toVerifyItems[j]).bind('blur',function(j) {
                 return function(){
                     Ys.removeClass(self.itemsWrap[j],'focus');
                     Ys.removeClass(self.toVerifyItems[j],'focus');
@@ -125,8 +125,8 @@ Ys.formValidator = function(options) {
         }
         
         
-        Ys.addEventListener(self.form,'submit',function(e) {
-            Ys.stopDefault(e);
+        Ys(self.form).bind('submit',function(e) {
+            Ys().stopDefault(e);
             var ok = true;
             for(var i = 0;i<options.toVerifyItems.length;i++) {
                 if(self.validValue[i] === false) {
