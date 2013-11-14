@@ -2726,9 +2726,24 @@ Ys.prototype.find = Sizzle;
 
 })( window );
 
-window.Ys = Ys;
+if ( typeof module === "object" && module && typeof module.exports === "object" ) {
+    module.exports = Ys;
+} else {
+    
+    
+    if ( typeof define === "function" && define.amd ) {
+
+        define( "Ys", [], function () { return Ys; } );
+    } else if(typeof define === "function" && define.cmd ){
+        define("Ys", [], function(require, exports, module){
+            module.exports = Ys;
+        });
+    }
+    else{
+        window.Ys = Ys;
+    }
+}
+
 
 })(window);
 
-/*网站配及=置及用户信息*/
-Ys.config = {};
