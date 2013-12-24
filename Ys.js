@@ -90,7 +90,6 @@
             this.addEventListener(this.element,type,function(){
                 var t = this.find(selector);
                 if (Ys.in_array(t,Ys.getEventTarget(event)) ){
-                    console.log(this);
                     fn();
                 }
             });
@@ -365,6 +364,7 @@ Ys.ajax = function(options) {
     var self = this;
     
     self.Ajax = null;
+
     
     var createAjaxRequest = function() {
         if (typeof XMLHttpRequest == 'undefined')
@@ -374,16 +374,15 @@ Ys.ajax = function(options) {
             self.Ajax = new XMLHttpRequest();
         }
     };
-    //console.log(self);
+
     /*超时时间*/
     var timer;
-    
     
     var send = function() {
         
         self.Ajax.open(options.type, options.url, options.async);
-    
-        if (options.type == 'GET') {
+        
+        if (options.type === 'GET') {
             self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
             self.Ajax.send();
         }else {
@@ -394,12 +393,12 @@ Ys.ajax = function(options) {
             default:
                 self.Ajax.setRequestHeader("Accept", 'application/json, text/javascript');
             }
+            self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
+            self.Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
+            self.Ajax.send(options.data);
         }
         
         
-        self.Ajax.setRequestHeader("If-Modified-Since", "Thu, 01 Jan 1970 00:00:00 GMT");
-        self.Ajax.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-        self.Ajax.send(options.data);
         timer = setTimeout(function() {
             if (typeof options.onTimeout == "function") options.onTimeout();
             if (self.Ajax) {
@@ -2743,7 +2742,6 @@ if ( typeof module === "object" && module && typeof module.exports === "object" 
         window.Ys = Ys;
     }
 }
-
 
 })(window);
 
