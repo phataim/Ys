@@ -36,4 +36,4 @@
         }
         return new ob();
     }
-})();
+})(window);
