@@ -1,5 +1,5 @@
 ;(function(){
-	if (typeof(window.Ys) === 'undefined') window.Ys = {};
+    if (typeof(window.Ys) === 'undefined') window.Ys = {};
     Ys.jsonp = function(options){
 
         Ys.jsonp.id = 0;
